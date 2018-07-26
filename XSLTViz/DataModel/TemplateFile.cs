@@ -15,5 +15,8 @@ namespace XSLTViz.DataModel
 
         [Required]
         public string Content { get; set; }
+
+        [Required]
+        public Project Project { get; set; }
     }
 }
