@@ -11,9 +11,6 @@ namespace XSLTViz
     {
         public ActionResult Index()
         {
-            var dbContext = new DataContext();
-            dbContext.SaveChanges();
-
             return View();
         }
     }

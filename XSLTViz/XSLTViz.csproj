@@ -15,7 +15,7 @@
     <RootNamespace>XSLTViz</RootNamespace>
     <AssemblyName>XSLTViz</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <UseIISExpress>false</UseIISExpress>
+    <UseIISExpress>true</UseIISExpress>
     <Use64BitIISExpress />
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -118,9 +118,12 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="DataModel\DataContext.cs" />
+    <Compile Include="DataModel\FilesRelation.cs" />
+    <Compile Include="DataModel\ParseFactory.cs" />
     <Compile Include="DataModel\Project.cs" />
     <Compile Include="DataModel\Template.cs" />
-    <Compile Include="DataModel\TemplateFile.cs" />
+    <Compile Include="DataModel\File.cs" />
+    <Compile Include="DataModel\TestDBInitializer.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

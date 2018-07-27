@@ -22,10 +22,9 @@ namespace XSLTViz.DataModel
         [Required]
         public TemplateSelector Selector { get; set; }
 
-        [Required]
         public string Mode { get; set; }
 
         [Required]
-        public TemplateFile File { get; set; }
+        public File File { get; set; }
     }
 }

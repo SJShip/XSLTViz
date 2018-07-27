@@ -13,8 +13,15 @@ namespace XSLTViz.DataModel
 
         public DbSet<Project> Projects { get; set; }
 
-        public DbSet<TemplateFile> Files { get; set; }
+        public DbSet<File> Files { get; set; }
 
         public DbSet<Template> Templates { get; set; }
+
+        public DbSet<FilesRelation> FilesRelations { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

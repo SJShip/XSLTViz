@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -20,7 +21,8 @@ namespace XSLTViz
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
 
-            Database.SetInitializer(new CreateDatabaseIfNotExists<DataContext>());
+            Database.SetInitializer(new TestDBInitializer());
+
             using (var context = new DataContext())
             {
                 context.Database.Initialize(force: true);

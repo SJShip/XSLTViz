@@ -6,12 +6,12 @@ using System.Web;
 
 namespace XSLTViz.DataModel
 {
-    public class TemplateFile
+    public class File
     {
         public int Id { get; set; }
 
         [Required]
-        public string FilePath { get; set; }
+        public string Path { get; set; }
 
         [Required]
         public string Content { get; set; }
