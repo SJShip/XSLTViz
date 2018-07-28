@@ -18,10 +18,13 @@ namespace XSLTViz.DataModel
             var files = Directory.GetFiles(filesLocation);
             foreach (var filePath in files)
             {
-                var content = System.IO.File.ReadAllText(filePath);
-                var lIndex = filePath.LastIndexOf("\\");
-                var shortPath = filePath.Substring(lIndex + 1);
-                context.Files.Add(new File { Content = content, Path = shortPath, Project = testProject});
+                if (filePath.EndsWith(".xsl") || filePath.EndsWith(".xslt"))
+                {
+                    var content = System.IO.File.ReadAllText(filePath);
+                    var lIndex = filePath.LastIndexOf("\\");
+                    var shortPath = filePath.Substring(lIndex + 1);
+                    context.Files.Add(new File { Content = content, Path = shortPath, Project = testProject });
+                }
             }
             context.SaveChanges();
 

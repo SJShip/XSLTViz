@@ -20,7 +20,7 @@ namespace XSLTViz.DataModel
             foreach (XmlNode importNode in importNodes)
             {
                 var importPath = importNode.Attributes["href"].Value;
-                context.FilesRelations.Add(new FilesRelation { Source = context.Files.Local.FirstOrDefault(f => f.Path == importPath),
+                context.FilesRelations.Add(new FilesRelation { Source = context.Files.Local.First(f => f.Path.ToLower() == importPath.ToLower()),
                     Target = file, Mode = FilesRelationMode.Import});
             }
 
@@ -28,18 +28,19 @@ namespace XSLTViz.DataModel
             foreach (XmlNode includeNode in includeNodes)
             {
                 var includePath = includeNode.Attributes["href"].Value;
-                context.FilesRelations.Add(new FilesRelation { Source = context.Files.Local.FirstOrDefault(f => f.Path == includePath),
+                context.FilesRelations.Add(new FilesRelation { Source = context.Files.Local.First(f => f.Path.ToLower() == includePath.ToLower()),
                     Target = file, Mode = FilesRelationMode.Include });
             }
         }
 
         public static void ParseProject(DataContext context, Project project)
         {
-            var files = (from f in context.Files
-                     where f.Project == project
-                     select f);
+            var files = from f in context.Files
+                        where f.Project.Id == project.Id
+                        select f;
+ 
 
-            foreach (var file in files)
+            foreach (File file in files)
             {
                 ParseFile(context, file);
             }
