@@ -35,9 +35,9 @@ namespace XSLTViz.DataModel
 
         public static void ParseProject(DataContext context, Project project)
         {
-            var files = from f in context.Files
+            var files = (from f in context.Files
                         where f.Project.Id == project.Id
-                        select f;
+                        select f).ToList();
  
 
             foreach (File file in files)
