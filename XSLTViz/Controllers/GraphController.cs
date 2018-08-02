@@ -32,8 +32,8 @@ namespace XSLTViz.Controllers
                     {
                         links.Add(new Link
                         {
-                            Source = link.Source.Id,
-                            Target = link.Target.Id
+                            Source = link.Source.Id - 1,
+                            Target = link.Target.Id - 1
                         });
                     }
 

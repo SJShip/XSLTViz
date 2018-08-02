@@ -13,8 +13,5 @@ namespace XSLTViz.APIModels
 
         [JsonProperty(PropertyName = "id")]
         public int Id { get; set; }
-
-        [JsonProperty(PropertyName = "group")]
-        public int Group { get { return 1; } }
     }
 }

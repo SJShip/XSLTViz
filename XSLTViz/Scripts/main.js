@@ -6,15 +6,31 @@
 		canvas = d3.select("body").append("svg")
 			.attr("width", w)
 			.attr("height", h)
-			.attr("viewBox", [0, 0, w * 3, h * 3].join(" ")),
+			.attr("viewBox", [0, 0, w, h].join(" ")),
 
-		defs = canvas.append("defs");
+		defs = canvas.append("defs").selectAll("marker")
+			.data(["suit", "licensing", "resolved"])
+			.enter().append("marker")
+			.attr("id", function (d) { return d; })
+			.attr("viewBox", "0 -5 10 10")
+			.attr("refX", 25)
+			.attr("refY", 0)
+			.attr("markerWidth", 6)
+			.attr("markerHeight", 6)
+			.attr("orient", "auto")
+			.append("path")
+			.attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+			.style("stroke", "#4679BD")
+			.style("opacity", "0.6");
+
+	//Set up the colour scale
+	var color = d3.scale.category20();
 
 
 	var initialWidth = w * 3;
 	var initialHeight = h * 3;
 
-	var zoomStep = 0.01;
+	var zoomStep = 0.05;
 	var zoomIn = function ()
 	{
 		var viewBoxParams = canvas.attr("viewBox").split(" ");
@@ -81,37 +97,55 @@
 	window.addEventListener("resize", adjustBoundaries);
 	window.addEventListener("mousewheel", mouseWheelHandler);
 
+	function dblclick(d)
+	{
+		d3.select(this).classed("fixed", d.fixed = false);
+	}
+
+	function dragstart(d)
+	{
+		d3.select(this).classed("fixed", d.fixed = true);
+	}
+
 	d3.json("api/graph/1", function (graph)
 	{
 		var force = d3.layout.force()
 			.size([w, h])
-			.charge(-120)
-			.linkDistance(30)
+			.charge(-150)
+			.linkDistance(50)
 			.nodes(graph.nodes)
 			.links(graph.links)
 			.start();
 
+		var drag = force.drag()
+			.on("dragstart", dragstart);
+
 		//Create all the line svgs but without locations yet
-		var link = svg.selectAll(".link")
+		var link = canvas.selectAll(".link")
 			.data(graph.links)
 			.enter().append("line")
 			.attr("class", "link")
 			.style("stroke-width", function (d)
 			{
 				return Math.sqrt(d.value);
-			});
+			})
+			.style("marker-end", "url(#suit)");			;
 
-		//Do the same with the circles for the nodes - no 
-		var node = svg.selectAll(".node")
+		// Do the same with the circles for the nodes - no 
+		var node = canvas.selectAll(".node")
 			.data(graph.nodes)
-			.enter().append("circle")
+			.enter().append("g")
+			.append("title").text(function (d)
+			{ return d.name; })
+			.select(function ()
+			{
+				return this.parentNode;
+			})
+			.append("circle")
 			.attr("class", "node")
 			.attr("r", 8)
-			.style("fill", function (d)
-			{
-				return color(d.group);
-			})
-			.call(force.drag);
+			.on("dblclick", dblclick)
+			.call(drag);
 
 		//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
 		force.on("tick", function ()
