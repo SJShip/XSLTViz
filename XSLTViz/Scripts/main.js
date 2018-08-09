@@ -94,8 +94,44 @@
 		}
 	}
 
+	var mouseDownHandler = function (e)
+	{
+		if (e.button === 0 && e.target.tagName.toLowerCase() != "circle")
+		{
+			this.startX = e.clientX;
+			this.startY = e.clientY;
+			$(document.body).addClass("move");
+			this.onmousemove = function (e)
+			{
+				var dx = e.clientX - this.startX;
+				var dy = e.clientY - this.startY;
+				var viewBoxParams = $(this).attr("viewBox").split(" ");
+				viewBoxParams[0] = Number(viewBoxParams[0]) - dx;
+				viewBoxParams[1] = Number(viewBoxParams[1]) - dy;
+				$(this).attr("viewBox", viewBoxParams.join(" "));
+				if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001)
+				{
+					this.startX = e.clientX;
+					this.startY = e.clientY;
+				}
+			}
+		}
+	}
+
+	var mouseUpHandler = function (e)
+	{
+		if (e.button === 0)
+		{
+			$(document.body).removeClass("move");
+			this.onmousemove = null;
+			this.onmouseup = null;
+		}
+	}
+
 	window.addEventListener("resize", adjustBoundaries);
 	window.addEventListener("mousewheel", mouseWheelHandler);
+	canvas[0][0].addEventListener("mousedown", mouseDownHandler);
+	canvas[0][0].addEventListener("mouseup", mouseUpHandler);
 
 	function dblclick(d)
 	{
