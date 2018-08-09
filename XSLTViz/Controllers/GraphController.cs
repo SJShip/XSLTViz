@@ -23,7 +23,16 @@ namespace XSLTViz.Controllers
 
                 foreach (File file in files)
                 {
-                    nodes.Add(new Node { Id = file.Id, Name = file.Path });
+                    var node = new Node { Id = file.Id, Name = file.Path };
+
+                    if (file.Point.X != null && file.Point.Y != null)
+                    {
+                        node.X = file.Point.X;
+                        node.Y = file.Point.Y;
+                        node.IsFixed = true;
+                    }
+
+                    nodes.Add(node);
                     var fileLinks = (from r in context.FilesRelations
                                     where r.Source.Id == file.Id
                                     select r).ToList();

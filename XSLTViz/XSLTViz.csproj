@@ -137,6 +137,7 @@
     <Compile Include="DataModel\DataContext.cs" />
     <Compile Include="DataModel\FilesRelation.cs" />
     <Compile Include="DataModel\ParseFactory.cs" />
+    <Compile Include="DataModel\Point.cs" />
     <Compile Include="DataModel\Project.cs" />
     <Compile Include="DataModel\Template.cs" />
     <Compile Include="DataModel\File.cs" />

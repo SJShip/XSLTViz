@@ -18,5 +18,7 @@ namespace XSLTViz.DataModel
 
         [Required]
         public Project Project { get; set; }
+
+        public Point Point { get; set; }
     }
 }

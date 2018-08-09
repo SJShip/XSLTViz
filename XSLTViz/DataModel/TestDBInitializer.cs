@@ -23,7 +23,7 @@ namespace XSLTViz.DataModel
                     var content = System.IO.File.ReadAllText(filePath);
                     var lIndex = filePath.LastIndexOf("\\");
                     var shortPath = filePath.Substring(lIndex + 1);
-                    context.Files.Add(new File { Content = content, Path = shortPath, Project = testProject });
+                    context.Files.Add(new File { Content = content, Path = shortPath, Project = testProject, Point = new Point() });
                 }
             }
             context.SaveChanges();

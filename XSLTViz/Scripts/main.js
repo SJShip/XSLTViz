@@ -202,20 +202,15 @@
 				{
 					return d.target.y;
 				});
-
-			node.attr("cx", function (d)
-			{
-				return d.x;
-			})
+				
+				node.attr("cx", function (d)
+				{
+					return d.x;
+				})
 				.attr("cy", function (d)
 				{
 					return d.y;
 				});
 		});
 	});
-
-	//var force = d3.layout.force()
-	//	.size([w, h])
-	//	.nodes(nodes)
-	//	.links(links);
 });
