@@ -134,6 +134,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\GraphController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="DataModel\DataContext.cs" />
     <Compile Include="DataModel\FilesRelation.cs" />
     <Compile Include="DataModel\ParseFactory.cs" />

@@ -135,12 +135,39 @@
 
 	function dblclick(d)
 	{
+		d.fixed = false;
 		d3.select(this).classed("fixed", d.fixed = false);
+		$.ajax({
+			method: "POST",
+			url: "api/files/" + d.id,
+			data: d,
+			error: function (e)
+			{
+				console.log(e);
+			}
+		});
 	}
 
 	function dragstart(d)
 	{
 		d3.select(this).classed("fixed", d.fixed = true);
+	}
+
+	function dragend(d)
+	{
+		var $this = $(this);
+		d.fixed = true;
+		d.x = Number($this.attr("cx"));
+		d.y = Number($this.attr("cy"));
+		$.ajax({
+			method: "POST",
+			url: "api/files/" + d.id,
+			data: d,
+			error: function (e)
+			{
+				console.log(e);
+			}
+		});
 	}
 
 	d3.json("api/graph/1", function (graph)
@@ -154,7 +181,8 @@
 			.start();
 
 		var drag = force.drag()
-			.on("dragstart", dragstart);
+			.on("dragstart", dragstart)
+			.on("dragend", dragend);
 
 		//Create all the line svgs but without locations yet
 		var link = canvas.selectAll(".link")

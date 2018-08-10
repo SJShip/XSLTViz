@@ -10,10 +10,6 @@ namespace XSLTViz.DataModel
     [ComplexType]
     public class Point
     {
-        public Point() {
-            X = 1;
-            Y = 1;
-        }
         [JsonProperty(PropertyName = "x")]
         public int? X { get; set; }
 

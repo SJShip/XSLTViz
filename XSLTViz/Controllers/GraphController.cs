@@ -29,7 +29,7 @@ namespace XSLTViz.Controllers
                     {
                         node.X = file.Point.X;
                         node.Y = file.Point.Y;
-                        node.IsFixed = true;
+                        node.IsFixed = file.IsFixed;
                     }
 
                     nodes.Add(node);
