@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -11,13 +13,13 @@ namespace XSLTViz.Controllers
 {
     public class FilesController : ApiController
     {
-        public HttpResponseMessage Post(int id, Node node)
+        public HttpResponseMessage Patch([FromBody] Node node)
         {
             using (var context = new DataContext())
             {
                 var file = (from f in context.Files
-                             where f.Id == id
-                             select f).First();
+                            where f.Id == node.Id
+                            select f).First();
 
                 if (file == null)
                 {

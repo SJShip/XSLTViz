@@ -138,9 +138,11 @@
 		d.fixed = false;
 		d3.select(this).classed("fixed", d.fixed = false);
 		$.ajax({
-			method: "POST",
+			method: "PATCH",
 			url: "api/files/" + d.id,
-			data: d,
+			contentType: "application/json",
+			dataType: 'json',
+			data: JSON.stringify(d),
 			error: function (e)
 			{
 				console.log(e);
@@ -160,9 +162,11 @@
 		d.x = Number($this.attr("cx"));
 		d.y = Number($this.attr("cy"));
 		$.ajax({
-			method: "POST",
+			method: "PATCH",
+			contentType: "application/json",
 			url: "api/files/" + d.id,
-			data: d,
+			dataType: 'json',
+			data: JSON.stringify(d),
 			error: function (e)
 			{
 				console.log(e);
