@@ -1,9 +1,47 @@
 ﻿$(function ()
 {
+	if (!String.prototype.format)
+	{
+		String.prototype.format = String.prototype.f = function ()
+		{
+			var args = arguments;
+			return this.replace(/\{\{|\}\}|\{(\d+)\}/g, function (m, n)
+			{
+				if (m === "{{") { return "{"; }
+				if (m === "}}") { return "}"; }
+				return args[n];
+			});
+		};
+	}
+
 	var
 		w = document.documentElement.clientWidth,
-		h = document.documentElement.clientHeight,
-		canvas = d3.select("body").append("svg")
+		h = document.documentElement.clientHeight;
+
+	Split(['#viewport', '#right_pane'], {
+		sizes: [75, 25],
+		minWidth: 10
+	});
+
+	var rightPane = $("#right_pane");
+	var chkShowLeaves = $("#highlight_leaves");
+	chkShowLeaves.on("change", function ()
+	{
+		if (this.checked)
+		{
+			$(document.body).addClass("show_leaves");
+		} else
+		{
+			$(document.body).removeClass("show_leaves");
+		}
+		updateProject();
+	});
+	var chkColorEdges = $("#color_direction");
+
+	var project = null;
+
+	var
+		canvas = d3.select("#viewport").append("svg")
 			.attr("width", w)
 			.attr("height", h)
 			.attr("viewBox", [0, 0, w, h].join(" ")),
@@ -47,7 +85,7 @@
 		viewBoxParams[2] = (width - widthDelta).toString();
 		viewBoxParams[3] = (height - heightDelta).toString()
 		canvas.attr("viewBox", viewBoxParams.join(" "));
-	}
+	};
 
 	var zoomOut = function ()
 	{
@@ -68,7 +106,7 @@
 			viewBoxParams[3] = (height + heightDelta).toString()
 			canvas.attr("viewBox", viewBoxParams.join(" "));
 		}
-	}
+	};
 
 	var adjustBoundaries = function (e)
 	{
@@ -79,9 +117,9 @@
 		canvas
 			.attr("width", w)
 			.attr("height", h);
-	}
-
-	var mouseWheelHandler = function (e, delta)
+	};
+		
+	var mouseWheelHandler = function (e)
 	{
 		e = e || window.event;
 		var delta = e.deltaY || e.detail || e.wheelDelta;
@@ -92,11 +130,11 @@
 		{
 			zoomIn();
 		}
-	}
+	};
 
 	var mouseDownHandler = function (e)
 	{
-		if (e.button === 0 && e.target.tagName.toLowerCase() != "circle")
+		if (e.button === 0 && e.target.tagName.toLowerCase() !== "circle")
 		{
 			this.startX = e.clientX;
 			this.startY = e.clientY;
@@ -114,9 +152,9 @@
 					this.startX = e.clientX;
 					this.startY = e.clientY;
 				}
-			}
+			};
 		}
-	}
+	};
 
 	var mouseUpHandler = function (e)
 	{
@@ -126,17 +164,15 @@
 			this.onmousemove = null;
 			this.onmouseup = null;
 		}
-	}
+	};
 
 	window.addEventListener("resize", adjustBoundaries);
 	window.addEventListener("mousewheel", mouseWheelHandler);
 	canvas[0][0].addEventListener("mousedown", mouseDownHandler);
 	canvas[0][0].addEventListener("mouseup", mouseUpHandler);
 
-	function dblclick(d)
+	function updateFile(d)
 	{
-		d.fixed = false;
-		d3.select(this).classed("fixed", d.fixed = false);
 		$.ajax({
 			method: "PATCH",
 			url: "api/files/" + d.id,
@@ -148,6 +184,34 @@
 				console.log(e);
 			}
 		});
+	}
+
+	function updateProject()
+	{
+		var settings = {
+			viewbox: canvas.attr("viewBox"),
+			highlighted_leafs: chkShowLeaves[0].checked,
+			color_direction: chkColorEdges[0].checked
+		};
+
+		$.ajax({
+			method: "PATCH",
+			url: "api/projects/{0}".f(project.id + 1),
+			contentType: "application/json",
+			dataType: 'json',
+			data: JSON.stringify(settings),
+			error: function (e)
+			{
+				console.log(e);
+			}
+		});
+	}
+
+	function dblclick(d)
+	{
+		d.fixed = false;
+		d3.select(this).classed("fixed", d.fixed = false);
+		updateFile(d);
 	}
 
 	function dragstart(d)
@@ -161,12 +225,29 @@
 		d.fixed = true;
 		d.x = Number($this.attr("cx"));
 		d.y = Number($this.attr("cy"));
+		updateFile(d);
+	}
+
+	function loadProject(projectId)
+	{
+		rightPane.css("visibility", "hidden");
+		// Load project data
 		$.ajax({
-			method: "PATCH",
+			method: "GET",
+			url: "api/projects/" + projectId,
 			contentType: "application/json",
-			url: "api/files/" + d.id,
-			dataType: 'json',
-			data: JSON.stringify(d),
+			success: function (data)
+			{
+				project = data;
+				$("#project_name").html(data.projectName);
+				$("#total_files").html(data.totalFiles);
+				chkShowLeaves.prop("checked", data.settings.highlighted_leafs).trigger("change");
+				chkColorEdges.prop("checked", data.settings.color_direction).trigger("change");
+
+				rightPane.css("visibility", "visible");
+
+				buildGraphics(data);
+			},
 			error: function (e)
 			{
 				console.log(e);
@@ -174,75 +255,90 @@
 		});
 	}
 
-	d3.json("api/graph/1", function (graph)
+	function buildGraphics(projectData)
 	{
-		var force = d3.layout.force()
-			.size([w, h])
-			.charge(-150)
-			.linkDistance(50)
-			.nodes(graph.nodes)
-			.links(graph.links)
-			.start();
-
-		var drag = force.drag()
-			.on("dragstart", dragstart)
-			.on("dragend", dragend);
-
-		//Create all the line svgs but without locations yet
-		var link = canvas.selectAll(".link")
-			.data(graph.links)
-			.enter().append("line")
-			.attr("class", "link")
-			.style("stroke-width", function (d)
-			{
-				return Math.sqrt(d.value);
-			})
-			.style("marker-end", "url(#suit)");			;
-
-		// Do the same with the circles for the nodes - no 
-		var node = canvas.selectAll(".node")
-			.data(graph.nodes)
-			.enter().append("g")
-			.append("title").text(function (d)
-			{ return d.name; })
-			.select(function ()
-			{
-				return this.parentNode;
-			})
-			.append("circle")
-			.attr("class", "node")
-			.attr("r", 8)
-			.on("dblclick", dblclick)
-			.call(drag);
-
-		//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-		force.on("tick", function ()
+		if (projectData.settings.viewbox)
 		{
-			link.attr("x1", function (d)
+			canvas.attr("viewBox", projectData.settings.viewbox);
+		}
+
+		// Load graph data
+		d3.json("api/graph/{0}".f(projectData.id + 1), function (graph)
+		{
+			var force = d3.layout.force()
+				.size([w, h])
+				.charge(-700)
+				.linkDistance(10)
+				.nodes(graph.nodes)
+				.links(graph.links)
+				.start();
+
+			var drag = force.drag()
+				.on("dragstart", dragstart)
+				.on("dragend", dragend);
+
+			//Create all the line svgs but without locations yet
+			var link = canvas.selectAll(".link")
+				.data(graph.links)
+				.enter().append("line")
+				.attr("class", "link")
+				.style("stroke-width", function (d)
+				{
+					return Math.sqrt(d.value);
+				})
+				.style("marker-end", "url(#suit)");
+
+			// Do the same with the circles for the nodes - no 
+			var node = canvas.selectAll(".node")
+				.data(graph.nodes)
+				.enter().append("g")
+				.append("title").text(function (d)
+				{ return d.name; })
+				.select(function ()
+				{
+					return this.parentNode;
+				})
+				.append("circle")
+				.attr("class", "node")
+				.attr("data-leaf", function (d)
+				{
+					return d.leaf;
+				})
+				.attr("r", 10)
+				.on("dblclick", dblclick)
+				.call(drag);
+
+			// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
+			force.on("tick", function ()
 			{
-				return d.source.x;
-			})
-				.attr("y1", function (d)
+				link.attr("x1", function (d)
 				{
-					return d.source.y;
+					return d.source.x;
 				})
-				.attr("x2", function (d)
-				{
-					return d.target.x;
-				})
-				.attr("y2", function (d)
-				{
-					return d.target.y;
-				});
-				
+					.attr("y1", function (d)
+					{
+						return d.source.y;
+					})
+					.attr("x2", function (d)
+					{
+						return d.target.x;
+					})
+					.attr("y2", function (d)
+					{
+						return d.target.y;
+					});
+
 				node.attr("cx", function (d)
 				{
 					return d.x;
 				})
-				.attr("cy", function (d)
-				{
-					return d.y;
-				});
-		});
-	});
+					.attr("cy", function (d)
+					{
+						return d.y;
+					});
+			});
+		});	
+	}
+
+	loadProject(1);
 });

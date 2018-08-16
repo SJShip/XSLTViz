@@ -13,7 +13,7 @@ namespace XSLTViz.DataModel
     {
         protected override void Seed(DataContext context)
         {
-            var testProject = context.Projects.Add(new Project { ProjectName="TestProject"});
+            var testProject = context.Projects.Add(new Project { ProjectName="TestProject", Settings = new Settings { } });
             var filesLocation = ConfigurationManager.AppSettings["filesLocation"];
             var files = Directory.GetFiles(filesLocation);
             foreach (var filePath in files)

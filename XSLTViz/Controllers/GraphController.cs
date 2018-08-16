@@ -32,20 +32,27 @@ namespace XSLTViz.Controllers
                         node.IsFixed = file.IsFixed;
                     }
 
-                    nodes.Add(node);
                     var fileLinks = (from r in context.FilesRelations
                                     where r.Source.Id == file.Id
                                     select r).ToList();
 
-                    foreach (FilesRelation link in fileLinks)
+                    if (fileLinks.Count == 0)
                     {
-                        links.Add(new Link
+                        node.IsLeaf = true;
+                    }
+                    else
+                    {
+                        foreach (FilesRelation link in fileLinks)
                         {
-                            Source = link.Source.Id - 1,
-                            Target = link.Target.Id - 1
-                        });
+                            links.Add(new Link
+                            {
+                                Source = link.Source.Id - 1,
+                                Target = link.Target.Id - 1
+                            });
+                        }
                     }
 
+                    nodes.Add(node);
                 }
             }
             return new FilesRelationGraph

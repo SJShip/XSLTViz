@@ -20,6 +20,9 @@ namespace XSLTViz.APIModels
         [JsonProperty(PropertyName = "y")]
         public double? Y { get; set; }
 
+        [JsonProperty(PropertyName = "leaf")]
+        public bool IsLeaf { get; set; }
+
         public Node() { }
     }
 }
