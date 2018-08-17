@@ -48,5 +48,31 @@ namespace XSLTViz.Controllers
                 return response;
             }
         }
+
+        [Route("api/projects/{id}/undock")]
+        [HttpPatch]
+        public HttpResponseMessage UndockNodes(int id)
+        {
+            using (var context = new DataContext())
+            {
+                var files = (from f in context.Files
+                             where f.Project.Id == id
+                             select f).ToList();
+
+                if (files.Count == 0)
+                {
+                    return Request.CreateResponse(System.Net.HttpStatusCode.NotFound);
+                }
+
+                foreach (var file in files)
+                {
+                    file.IsFixed = false;
+                }
+
+                context.SaveChanges();
+                var response = Request.CreateResponse(System.Net.HttpStatusCode.OK);
+                return response;
+            }
+        }
     }
 }

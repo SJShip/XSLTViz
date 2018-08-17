@@ -7,9 +7,6 @@ body.move {
 	cursor: move;
 }
 
-svg {
-}
-
 body {
 	overflow: hidden;
 }
@@ -17,6 +14,13 @@ body {
 line.link {
 	stroke: #999;
 	stroke-opacity: 0.6;
+	marker-end: url(#arrow);
+}
+
+body.color_edges line.link{
+	marker-end: none;
+	stroke: url("#edge_gradient");
+	stroke-opacity: 0.9;
 }
 
 circle.node {

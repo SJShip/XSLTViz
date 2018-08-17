@@ -37,6 +37,30 @@
 		updateProject();
 	});
 	var chkColorEdges = $("#color_direction");
+	chkColorEdges.on("change", function ()
+	{
+		if (this.checked)
+		{
+			$(document.body).addClass("color_edges");
+		} else
+		{
+			$(document.body).removeClass("color_edges");
+		}
+		//canvas.selectAll("line.link");
+		updateProject();
+	});
+
+	var btnUndockNodes = $("#btnUndockNodes");
+	btnUndockNodes.on("click", function ()
+	{
+		$("#mdlUndockNodes").modal("show");
+	});
+	var btnConfirmUndock = $("#btnConfirmUndock");
+	btnConfirmUndock.on("click", function ()
+	{
+		$("#mdlUndockNodes").modal("hide");
+		undockProjectNodes();
+	});
 
 	var project = null;
 
@@ -47,7 +71,7 @@
 			.attr("viewBox", [0, 0, w, h].join(" ")),
 
 		defs = canvas.append("defs").selectAll("marker")
-			.data(["suit", "licensing", "resolved"])
+			.data(["arrow"])
 			.enter().append("marker")
 			.attr("id", function (d) { return d; })
 			.attr("viewBox", "0 -5 10 10")
@@ -59,7 +83,13 @@
 			.append("path")
 			.attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
 			.style("stroke", "#4679BD")
-			.style("opacity", "0.6");
+			.select(function ()	{ return this.parentNode;})
+			.append("linearGradient ")
+			.attr("id", "edge_gradient")
+			.attr("x1", "0%")
+			.attr("y1", "0%")
+			.attr("x2", "100%")
+			.attr("y2", "0%")
 
 	//Set up the colour scale
 	var color = d3.scale.category20();
@@ -175,9 +205,8 @@
 	{
 		$.ajax({
 			method: "PATCH",
-			url: "api/files/" + d.id,
 			contentType: "application/json",
-			dataType: 'json',
+			url: "api/files/" + d.id,
 			data: JSON.stringify(d),
 			error: function (e)
 			{
@@ -196,15 +225,30 @@
 
 		$.ajax({
 			method: "PATCH",
-			url: "api/projects/{0}".f(project.id + 1),
 			contentType: "application/json",
-			dataType: 'json',
+			url: "api/projects/{0}".f(project.id + 1),
 			data: JSON.stringify(settings),
 			error: function (e)
 			{
 				console.log(e);
 			}
 		});
+	}
+
+	function undockProjectNodes()
+	{
+		$.ajax({
+			method: "PATCH",
+			url: "api/projects/{0}/undock".f(project.id + 1),
+			success: function ()
+			{
+				loadProject(project.id + 1);
+			},
+			error: function (e)
+			{
+				console.log(e);
+			}
+		});		
 	}
 
 	function dblclick(d)
@@ -241,8 +285,17 @@
 				project = data;
 				$("#project_name").html(data.projectName);
 				$("#total_files").html(data.totalFiles);
-				chkShowLeaves.prop("checked", data.settings.highlighted_leafs).trigger("change");
-				chkColorEdges.prop("checked", data.settings.color_direction).trigger("change");
+				chkShowLeaves.prop("checked", data.settings.highlighted_leafs);
+
+				if (data.settings.highlighted_leafs)
+				{
+					$(document.body).addClass("show_leaves");
+				} else
+				{
+					$(document.body).removeClass("show_leaves");
+				}
+
+				chkColorEdges.prop("checked", data.settings.color_direction);
 
 				rightPane.css("visibility", "visible");
 
@@ -257,6 +310,7 @@
 
 	function buildGraphics(projectData)
 	{
+
 		if (projectData.settings.viewbox)
 		{
 			canvas.attr("viewBox", projectData.settings.viewbox);
@@ -265,10 +319,14 @@
 		// Load graph data
 		d3.json("api/graph/{0}".f(projectData.id + 1), function (graph)
 		{
+			// Clears canvas data excepts <defs>
+			canvas.selectAll("g").remove();
+			canvas.selectAll("line.link").remove();
+
 			var force = d3.layout.force()
 				.size([w, h])
 				.charge(-700)
-				.linkDistance(10)
+				.linkDistance(5)
 				.nodes(graph.nodes)
 				.links(graph.links)
 				.start();
@@ -285,8 +343,8 @@
 				.style("stroke-width", function (d)
 				{
 					return Math.sqrt(d.value);
-				})
-				.style("marker-end", "url(#suit)");
+				});
+				//.style("marker-end", "url(#arrow)");
 
 			// Do the same with the circles for the nodes - no 
 			var node = canvas.selectAll(".node")
@@ -338,6 +396,11 @@
 					});
 			});
 		});	
+	}
+
+	function restartGraphics()
+	{
+		
 	}
 
 	loadProject(1);
