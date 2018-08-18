@@ -45,8 +45,8 @@
 		} else
 		{
 			$(document.body).removeClass("color_edges");
+			$("line.link").removeAttr("style");
 		}
-		//canvas.selectAll("line.link");
 		updateProject();
 	});
 
@@ -65,31 +65,11 @@
 	var project = null;
 
 	var
-		canvas = d3.select("#viewport").append("svg")
+		canvas = d3.select("#viewport > svg")
 			.attr("width", w)
 			.attr("height", h)
 			.attr("viewBox", [0, 0, w, h].join(" ")),
-
-		defs = canvas.append("defs").selectAll("marker")
-			.data(["arrow"])
-			.enter().append("marker")
-			.attr("id", function (d) { return d; })
-			.attr("viewBox", "0 -5 10 10")
-			.attr("refX", 25)
-			.attr("refY", 0)
-			.attr("markerWidth", 6)
-			.attr("markerHeight", 6)
-			.attr("orient", "auto")
-			.append("path")
-			.attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
-			.style("stroke", "#4679BD")
-			.select(function ()	{ return this.parentNode;})
-			.append("linearGradient ")
-			.attr("id", "edge_gradient")
-			.attr("x1", "0%")
-			.attr("y1", "0%")
-			.attr("x2", "100%")
-			.attr("y2", "0%")
+		defs = d3.select("#viewport > svg > defs");
 
 	//Set up the colour scale
 	var color = d3.scale.category20();
@@ -201,6 +181,38 @@
 	canvas[0][0].addEventListener("mousedown", mouseDownHandler);
 	canvas[0][0].addEventListener("mouseup", mouseUpHandler);
 
+	function angleToPoints(angle)
+	{
+		var segment = Math.floor(angle / Math.PI * 2) + 2;
+		var diagonal = (1 / 2 * segment + 1 / 4) * Math.PI;
+		var op = Math.cos(Math.abs(diagonal - angle)) * Math.sqrt(2);
+		var x = op * Math.cos(angle);
+		var y = op * Math.sin(angle);
+
+		return {
+			x1: x < 0 ? 1 : 0,
+			y1: y < 0 ? 1 : 0,
+			x2: x >= 0 ? x : x + 1,
+			y2: y >= 0 ? y : y + 1
+		};
+	}
+
+	//function toRadians(degrees)
+	//{
+	//	return degrees / 180 * Math.PI;
+	//}
+
+	function getGradientParams(d)
+	{
+		var dx = d.target.x - d.source.x;
+		var dy = d.target.y - d.source.y;
+		var angle = Math.atan2(dy, dx) - Math.atan2(0, 1);
+
+		if (angle < 0) angle += 2 * Math.PI;
+
+		return angleToPoints(angle);
+	}
+
 	function updateFile(d)
 	{
 		$.ajax({
@@ -297,6 +309,14 @@
 
 				chkColorEdges.prop("checked", data.settings.color_direction);
 
+				if (data.settings.color_direction)
+				{
+					$(document.body).addClass("color_edges");
+				} else
+				{
+					$(document.body).removeClass("color_edges");
+				}
+
 				rightPane.css("visibility", "visible");
 
 				buildGraphics(data);
@@ -335,7 +355,7 @@
 				.on("dragstart", dragstart)
 				.on("dragend", dragend);
 
-			//Create all the line svgs but without locations yet
+			// Create all the line svgs but without locations yet
 			var link = canvas.selectAll(".link")
 				.data(graph.links)
 				.enter().append("line")
@@ -344,7 +364,11 @@
 				{
 					return Math.sqrt(d.value);
 				});
-				//.style("marker-end", "url(#arrow)");
+
+			var linkGradient = defs.selectAll(".gr").data(graph.links).enter()
+				.append("linearGradient")
+				.attr("id", function (d) { return "gr_{0}_{1}".f(d.source.id, d.target.id); })
+				.attr("xlink:href", "#color_edge");
 
 			// Do the same with the circles for the nodes - no 
 			var node = canvas.selectAll(".node")
@@ -386,6 +410,37 @@
 						return d.target.y;
 					});
 
+				if (project.settings.color_direction)
+				{
+					link.attr("style", function (d)
+					{
+						return "stroke: url(\"#gr_{0}_{1}\");".f(d.source.id, d.target.id);
+					});
+
+
+					linkGradient.attr("x1", function (d)
+					{
+						return getGradientParams(d).x1;
+					})
+						.attr("y1", function (d)
+						{
+							return getGradientParams(d).y1;
+						})
+						.attr("x2", function (d)
+						{
+							return getGradientParams(d).x2;
+						})
+						.attr("y2", function (d)
+						{
+							return getGradientParams(d).y2;
+						});
+				} else
+				{
+					link.attr("style", "");
+				}
+
+					
+
 				node.attr("cx", function (d)
 				{
 					return d.x;
@@ -396,11 +451,6 @@
 					});
 			});
 		});	
-	}
-
-	function restartGraphics()
-	{
-		
 	}
 
 	loadProject(1);
