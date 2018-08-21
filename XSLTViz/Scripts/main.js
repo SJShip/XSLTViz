@@ -27,6 +27,7 @@
 	var chkShowLeaves = $("#highlight_leaves");
 	chkShowLeaves.on("change", function ()
 	{
+		project.settings.highlighted_leafs = this.checked;
 		if (this.checked)
 		{
 			$(document.body).addClass("show_leaves");
@@ -39,9 +40,15 @@
 	var chkColorEdges = $("#color_direction");
 	chkColorEdges.on("change", function ()
 	{
+		project.settings.color_direction = this.checked;
 		if (this.checked)
 		{
 			$(document.body).addClass("color_edges");
+			d3.selectAll("line.link").attr("style", function ()
+			{
+				var id = $(this).attr("id");
+				return "stroke: url({0});".f(id.replace("l_", "gr_"));
+			});
 		} else
 		{
 			$(document.body).removeClass("color_edges");
@@ -128,7 +135,7 @@
 			.attr("width", w)
 			.attr("height", h);
 	};
-		
+
 	var mouseWheelHandler = function (e)
 	{
 		e = e || window.event;
@@ -197,18 +204,11 @@
 		};
 	}
 
-	//function toRadians(degrees)
-	//{
-	//	return degrees / 180 * Math.PI;
-	//}
-
 	function getGradientParams(d)
 	{
 		var dx = d.target.x - d.source.x;
 		var dy = d.target.y - d.source.y;
 		var angle = Math.atan2(dy, dx) - Math.atan2(0, 1);
-
-		if (angle < 0) angle += 2 * Math.PI;
 
 		return angleToPoints(angle);
 	}
@@ -260,7 +260,7 @@
 			{
 				console.log(e);
 			}
-		});		
+		});
 	}
 
 	function dblclick(d)
@@ -342,11 +342,12 @@
 			// Clears canvas data excepts <defs>
 			canvas.selectAll("g").remove();
 			canvas.selectAll("line.link").remove();
+			canvas.selectAll("linearGradient[x1]").remove();
 
 			var force = d3.layout.force()
 				.size([w, h])
-				.charge(-700)
-				.linkDistance(5)
+				.charge(-50)
+				.linkDistance(0.1)
 				.nodes(graph.nodes)
 				.links(graph.links)
 				.start();
@@ -360,6 +361,10 @@
 				.data(graph.links)
 				.enter().append("line")
 				.attr("class", "link")
+				.attr("id", function (d)
+				{
+					return "#l_{0}_{1}".f(d.source.id, d.target.id);
+				})
 				.style("stroke-width", function (d)
 				{
 					return Math.sqrt(d.value);
@@ -381,12 +386,19 @@
 					return this.parentNode;
 				})
 				.append("circle")
-				.attr("class", "node")
+				.attr("class", function (d)
+				{
+					if (d.fixed)
+					{
+						return "node fixed";
+					}
+					return "node";
+				})
 				.attr("data-leaf", function (d)
 				{
 					return d.leaf;
 				})
-				.attr("r", 10)
+				.attr("r", 3)
 				.on("dblclick", dblclick)
 				.call(drag);
 
@@ -410,36 +422,35 @@
 						return d.target.y;
 					});
 
+				linkGradient.attr("x1", function (d)
+				{
+					return getGradientParams(d).x1;
+				})
+					.attr("y1", function (d)
+					{
+						return getGradientParams(d).y1;
+					})
+					.attr("x2", function (d)
+					{
+						return getGradientParams(d).x2;
+					})
+					.attr("y2", function (d)
+					{
+						return getGradientParams(d).y2;
+					});
+
 				if (project.settings.color_direction)
 				{
 					link.attr("style", function (d)
 					{
 						return "stroke: url(\"#gr_{0}_{1}\");".f(d.source.id, d.target.id);
 					});
-
-
-					linkGradient.attr("x1", function (d)
-					{
-						return getGradientParams(d).x1;
-					})
-						.attr("y1", function (d)
-						{
-							return getGradientParams(d).y1;
-						})
-						.attr("x2", function (d)
-						{
-							return getGradientParams(d).x2;
-						})
-						.attr("y2", function (d)
-						{
-							return getGradientParams(d).y2;
-						});
 				} else
 				{
 					link.attr("style", "");
 				}
 
-					
+
 
 				node.attr("cx", function (d)
 				{
@@ -450,7 +461,7 @@
 						return d.y;
 					});
 			});
-		});	
+		});
 	}
 
 	loadProject(1);
