@@ -18,6 +18,9 @@ namespace XSLTViz.DataModel
         [JsonProperty(PropertyName = "color_direction")]  
         public bool IsDirectionColored { get; set; }
 
+        [JsonProperty(PropertyName = "show_labels")]
+        public bool AreLabelsShown { get; set; }
+
         [JsonProperty(PropertyName = "viewbox")]
         public string ViewBox { get; set; }
     }

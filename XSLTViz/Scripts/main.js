@@ -57,6 +57,20 @@
 		updateProject();
 	});
 
+	var chkShowLabels = $("#show_labels");
+	chkShowLabels.on("change", function ()
+	{
+		project.settings.show_labels = this.checked;
+		if (this.checked)
+		{
+			$(document.body).addClass("show_labels");
+		} else
+		{
+			$(document.body).removeClass("show_labels");
+		}
+		updateProject();
+	});
+
 	var btnUndockNodes = $("#btnUndockNodes");
 	btnUndockNodes.on("click", function ()
 	{
@@ -379,12 +393,6 @@
 			var node = canvas.selectAll(".node")
 				.data(graph.nodes)
 				.enter().append("g")
-				.append("title").text(function (d)
-				{ return d.name; })
-				.select(function ()
-				{
-					return this.parentNode;
-				})
 				.append("circle")
 				.attr("class", function (d)
 				{
@@ -399,6 +407,18 @@
 					return d.leaf;
 				})
 				.attr("r", 3)
+				.select(function ()
+				{
+					return this.parentNode;
+				})
+				.append("text").text(function (d)
+				{
+					return d.name;
+				})
+				.select(function ()
+				{
+					return this.parentNode.firstChild;
+				})
 				.on("dblclick", dblclick)
 				.call(drag);
 
@@ -459,7 +479,19 @@
 					.attr("cy", function (d)
 					{
 						return d.y;
-					});
+					})
+					.select(function ()
+					{
+						return this.parentNode.childNodes[1];
+					})
+					.attr("x", function (d)
+					{
+						return d.x;
+					})
+					.attr("y", function (d)
+					{
+						return d.y + 0.5;
+					})					;
 			});
 		});
 	}

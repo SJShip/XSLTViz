@@ -27,6 +27,18 @@ circle.node {
 	stroke-width: 0.15px;
 }
 
+g > text {
+	visibility: hidden;
+}
+	body.show_labels g > text {
+	visibility:visible;
+	text-anchor: middle;
+	font-size: 2px;
+	user-select: none;
+	font-weight: bold;
+	fill: #555;
+}
+
 body.color_edges.show_leaves circle.node {
 	fill: #00aa00;
 }
