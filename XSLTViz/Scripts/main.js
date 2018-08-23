@@ -95,6 +95,8 @@
 	//Set up the colour scale
 	var color = d3.scale.category20();
 
+	var viewBoxUpdateTimeout = null;
+
 
 	var initialWidth = w * 3;
 	var initialHeight = h * 3;
@@ -161,6 +163,13 @@
 		{
 			zoomIn();
 		}
+
+		if (viewBoxUpdateTimeout)
+		{
+			clearTimeout(viewBoxUpdateTimeout);
+		}
+
+		viewBoxUpdateTimeout = setTimeout(updateProject, 1000);
 	};
 
 	var mouseDownHandler = function (e)
@@ -246,7 +255,8 @@
 		var settings = {
 			viewbox: canvas.attr("viewBox"),
 			highlighted_leafs: chkShowLeaves[0].checked,
-			color_direction: chkColorEdges[0].checked
+			color_direction: chkColorEdges[0].checked,
+			show_labels: chkShowLabels[0].checked
 		};
 
 		$.ajax({
@@ -329,6 +339,16 @@
 				} else
 				{
 					$(document.body).removeClass("color_edges");
+				}
+
+				chkShowLabels.prop("checked", data.settings.show_labels);
+
+				if (data.settings.show_labels)
+				{
+					$(document.body).addClass("show_labels");
+				} else
+				{
+					$(document.body).removeClass("show_labels");
 				}
 
 				rightPane.css("visibility", "visible");

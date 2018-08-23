@@ -36,12 +36,16 @@ g > text {
 	font-size: 2px;
 	user-select: none;
 	font-weight: bold;
-	fill: #555;
+	fill: #999;
 }
 
-body.color_edges.show_leaves circle.node {
-	fill: #00aa00;
-}
+	body.show_labels.show_leaves g > text {
+		fill: #000;
+	}
+
+		body.show_leaves circle.node {
+			fill: #00aa00;
+		}
 
 body.show_leaves circle.node[data-leaf='true'] {
 	fill: red;
