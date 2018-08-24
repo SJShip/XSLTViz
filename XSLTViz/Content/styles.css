@@ -22,12 +22,12 @@ body.color_edges line.link {
 	stroke-width: 0.8px;
 }
 
-circle.node {
+g.node circle {
 	stroke: #fff;
 	stroke-width: 0.15px;
 }
 
-g > text {
+g.node > text {
 	visibility: hidden;
 }
 	body.show_labels g > text {
@@ -43,15 +43,15 @@ g > text {
 		fill: #000;
 	}
 
-		body.show_leaves circle.node {
+		body.show_leaves g.node circle{
 			fill: #00aa00;
 		}
 
-body.show_leaves circle.node[data-leaf='true'] {
+body.show_leaves g.node circle[data-leaf='true'] {
 	fill: red;
 }
 
-circle.node.fixed {
+g.node.fixed circle {
 	stroke-width: 0.5px;
 	stroke: yellow;
 }

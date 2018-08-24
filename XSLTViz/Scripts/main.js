@@ -174,7 +174,8 @@
 
 	var mouseDownHandler = function (e)
 	{
-		if (e.button === 0 && e.target.tagName.toLowerCase() !== "circle")
+		var tagName = e.target.tagName.toLowerCase();
+		if (e.button === 0 && tagName !== "circle" && tagName !== "text")
 		{
 			this.startX = e.clientX;
 			this.startY = e.clientY;
@@ -374,7 +375,7 @@
 		d3.json("api/graph/{0}".f(projectData.id + 1), function (graph)
 		{
 			// Clears canvas data excepts <defs>
-			canvas.selectAll("g").remove();
+			canvas.selectAll("g.node").remove();
 			canvas.selectAll("line.link").remove();
 			canvas.selectAll("linearGradient[x1]").remove();
 
@@ -413,7 +414,6 @@
 			var node = canvas.selectAll(".node")
 				.data(graph.nodes)
 				.enter().append("g")
-				.append("circle")
 				.attr("class", function (d)
 				{
 					if (d.fixed)
@@ -422,6 +422,7 @@
 					}
 					return "node";
 				})
+				.append("circle")
 				.attr("data-leaf", function (d)
 				{
 					return d.leaf;
@@ -437,7 +438,7 @@
 				})
 				.select(function ()
 				{
-					return this.parentNode.firstChild;
+					return this.parentNode;
 				})
 				.on("dblclick", dblclick)
 				.call(drag);
@@ -492,10 +493,11 @@
 
 
 
-				node.attr("cx", function (d)
-				{
-					return d.x;
-				})
+				node.select(function () { return this.childNodes[0]; })
+					.attr("cx", function (d)
+					{
+						return d.x;
+					})
 					.attr("cy", function (d)
 					{
 						return d.y;
