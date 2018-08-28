@@ -14,6 +14,9 @@ namespace XSLTViz.APIModels
 
         [JsonProperty(PropertyName = "fixed")]
         public bool IsFixed { get; set; }
+
+        [JsonProperty(PropertyName = "size")]
+        public long Size { get; set; }
         
         [JsonProperty(PropertyName = "x")]
         public double? X { get; set; }

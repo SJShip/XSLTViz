@@ -91,6 +91,16 @@
 		updateProject();
 	});
 
+	var chkShowSize = $("#show_size");
+	chkShowSize.on("change", function ()
+	{
+		project.settings.show_size = this.checked;
+		updateProject(function ()
+		{
+			loadProject(project.id + 1);
+		});
+	});
+
 	var btnUndockNodes = $("#btnUndockNodes");
 	btnUndockNodes.on("click", function ()
 	{
@@ -102,6 +112,8 @@
 		$("#mdlUndockNodes").modal("hide");
 		undockProjectNodes();
 	});
+
+
 
 	var project = null;
 
@@ -271,16 +283,17 @@
 		});
 	}
 
-	function updateProject()
+	function updateProject(onSuccess)
 	{
 		var settings = {
 			viewbox: canvas.attr("viewBox"),
 			highlighted_leafs: chkShowLeaves[0].checked,
 			color_direction: chkColorEdges[0].checked,
-			show_labels: chkShowLabels[0].checked
+			show_labels: chkShowLabels[0].checked,
+			show_size: chkShowSize[0].checked
 		};
 
-		$.ajax({
+		var ajaxOptions = {
 			method: "PATCH",
 			contentType: "application/json",
 			url: "api/projects/{0}".f(project.id + 1),
@@ -289,7 +302,14 @@
 			{
 				console.log(e);
 			}
-		});
+		};
+
+		if (typeof onSuccess === "function")
+		{
+			ajaxOptions.success = onSuccess;
+		}
+
+		$.ajax(ajaxOptions);
 	}
 
 	function undockProjectNodes()
@@ -434,6 +454,8 @@
 					$(document.body).removeClass("show_labels");
 				}
 
+				chkShowSize.prop("checked", data.settings.show_size);
+
 				rightPane.css("visibility", "visible");
 
 				buildGraphics(data);
@@ -463,11 +485,11 @@
 
 			var force = d3.layout.force()
 				.size([w, h])
-				.charge(function (d)
+				.charge(-50)
+				.linkDistance(function (d)
 				{
-					return -30;
+					return 0.1;
 				})
-				.linkDistance(0.1)
 				.nodes(graph.nodes)
 				.links(graph.links)
 				.start();
@@ -517,7 +539,14 @@
 				{
 					return d.leaf;
 				})
-				.attr("r", 3)
+				.attr("r", function (d)
+				{
+					if (project.settings.show_size)
+					{
+						return d.size * 2;
+					}
+					return 3;
+				})
 				.select(function ()
 				{
 					return this.parentNode;

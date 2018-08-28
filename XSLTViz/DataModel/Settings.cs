@@ -21,6 +21,9 @@ namespace XSLTViz.DataModel
         [JsonProperty(PropertyName = "show_labels")]
         public bool AreLabelsShown { get; set; }
 
+        [JsonProperty(PropertyName = "show_size")]
+        public bool IsSizeShown { get; set; }
+
         [JsonProperty(PropertyName = "viewbox")]
         public string ViewBox { get; set; }
     }
