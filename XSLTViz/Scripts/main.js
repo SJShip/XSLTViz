@@ -18,9 +18,8 @@
 		w = document.documentElement.clientWidth,
 		h = document.documentElement.clientHeight;
 
-	Split(['#viewport', '#right_pane'], {
-		sizes: [75, 25],
-		minWidth: 10
+	Split(['#left_pane', '#viewport', '#right_pane'], {
+		sizes: [1, 98, 1]
 	});
 
 	var rightPane = $("#right_pane");
@@ -175,7 +174,7 @@
 	var mouseDownHandler = function (e)
 	{
 		var tagName = e.target.tagName.toLowerCase();
-		if (e.button === 0 && tagName !== "circle" && tagName !== "text")
+		if (e.button === 0 && tagName !== "circle" && tagName !== "text" && tagName)
 		{
 			this.startX = e.clientX;
 			this.startY = e.clientY;
@@ -290,6 +289,8 @@
 
 	function dblclick(d)
 	{
+		$(".highlighted").removeClass("highlighted");
+
 		d.fixed = false;
 		d3.select(this).classed("fixed", d.fixed = false);
 		updateFile(d);
@@ -297,16 +298,47 @@
 
 	function dragstart(d)
 	{
+		$(".highlighted").removeClass("highlighted");
+
 		d3.select(this).classed("fixed", d.fixed = true);
 	}
 
 	function dragend(d)
 	{
-		var $this = $(this);
+		$(".highlighted").removeClass("highlighted");
+
+		var $this = $(this.childNodes[0]);
 		d.fixed = true;
 		d.x = Number($this.attr("cx"));
 		d.y = Number($this.attr("cy"));
 		updateFile(d);
+	}
+
+	function markRequiredElements(d)
+	{
+		$.ajax({
+			method: "GET",
+			url: "api/graph/{0}/path".f(d.id),
+			contentType: "application/json",
+			success: function (data)
+			{
+				$(".highlighted").removeClass("highlighted");
+				
+				data.nodes.forEach(function (node)
+				{
+					$("g[data-id='{0}']".f(node.id)).addClass("highlighted");
+				});
+
+				data.links.forEach(function (link)
+				{
+					$("#l_{0}_{1}".f(link.source, link.target)).addClass("highlighted");
+				});
+			},
+			error: function (e)
+			{
+				console.log(e);
+			}
+		});
 	}
 
 	function loadProject(projectId)
@@ -398,7 +430,7 @@
 				.attr("class", "link")
 				.attr("id", function (d)
 				{
-					return "#l_{0}_{1}".f(d.source.id, d.target.id);
+					return "l_{0}_{1}".f(d.source.id, d.target.id);
 				})
 				.style("stroke-width", function (d)
 				{
@@ -416,11 +448,16 @@
 				.enter().append("g")
 				.attr("class", function (d)
 				{
+					var classes = ["node"];
 					if (d.fixed)
 					{
-						return "node fixed";
+						classes.push("fixed");
 					}
-					return "node";
+					return classes.join(" ");
+				})
+				.attr("data-id", function (d)
+				{
+					return d.id;
 				})
 				.append("circle")
 				.attr("data-leaf", function (d)
@@ -441,6 +478,13 @@
 					return this.parentNode;
 				})
 				.on("dblclick", dblclick)
+				.on("mouseover", function (d)
+				{
+					if (event && event.shiftKey)
+					{
+						markRequiredElements(d);
+					}
+				})
 				.call(drag);
 
 			// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements

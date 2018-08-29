@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using XSLTViz.DataModel;
 
 namespace XSLTViz.APIModels
 {
@@ -24,5 +25,18 @@ namespace XSLTViz.APIModels
         public bool IsLeaf { get; set; }
 
         public Node() { }
+
+        public Node(File file)
+        {
+            Id = file.Id;
+            Name = file.Path;
+
+            if (file.Point.X != null && file.Point.Y != null)
+            {
+                X = file.Point.X;
+                Y = file.Point.Y;
+                IsFixed = file.IsFixed;
+            }
+        }
     }
 }

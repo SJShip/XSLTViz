@@ -11,7 +11,7 @@ namespace XSLTViz.Controllers
 {
     public class GraphController : ApiController
     {
-        public FilesRelationGraph Get(int id)
+        public Graph Get(int id)
         {
             var nodes = new List<Node>();
             var links = new List<Link>();
@@ -23,14 +23,7 @@ namespace XSLTViz.Controllers
 
                 foreach (File file in files)
                 {
-                    var node = new Node { Id = file.Id, Name = file.Path };
-
-                    if (file.Point.X != null && file.Point.Y != null)
-                    {
-                        node.X = file.Point.X;
-                        node.Y = file.Point.Y;
-                        node.IsFixed = file.IsFixed;
-                    }
+                    var node = new Node (file);
 
                     var fileLinks = (from r in context.FilesRelations
                                     where r.Source.Id == file.Id
@@ -55,7 +48,57 @@ namespace XSLTViz.Controllers
                     nodes.Add(node);
                 }
             }
-            return new FilesRelationGraph
+            return new Graph
+            {
+                Nodes = nodes,
+                Links = links
+            };
+        }
+
+        [Route("api/graph/{fileId}/path")]
+        [HttpGet]
+        public Graph GetPath(int fileId)
+        {
+            var nodes = new List<Node>();
+            var links = new List<Link>();
+
+            var stack = new Stack<Node>();
+            
+            using (var context = new DataContext())
+            {
+                var file = (from f in context.Files
+                             where f.Id == fileId
+                             select f).FirstOrDefault();
+
+                if (file != null)
+                {
+                    var node = new Node(file);
+                    stack.Push(node);
+                }
+
+                while (stack.Count > 0)
+                {
+                    Node current = stack.Pop();
+
+                    if (nodes.IndexOf(current) == -1)
+                    {
+                        nodes.Add(current);
+                    }
+
+                    var neighbors = (from fr in context.FilesRelations
+                                     where fr.Target.Id == current.Id
+                                     select fr.Source).ToList();
+                    foreach (var n in neighbors)
+                    {
+                        var node = new Node(n);
+                        stack.Push(node);
+
+                        links.Add(new Link { Source = node.Id, Target = current.Id });
+                    }
+                }
+            }
+
+            return new Graph
             {
                 Nodes = nodes,
                 Links = links

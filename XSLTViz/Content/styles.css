@@ -27,6 +27,14 @@ g.node circle {
 	stroke-width: 0.15px;
 }
 
+g.node.highlighted > circle {
+	fill: blue !important;
+}
+
+line.highlighted {
+	stroke: blue !important;
+}
+
 g.node > text {
 	visibility: hidden;
 }

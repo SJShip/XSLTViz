@@ -6,7 +6,7 @@ using System.Web;
 
 namespace XSLTViz.APIModels
 {
-    public class FilesRelationGraph
+    public class Graph
     {
         [JsonProperty(PropertyName = "links")]
         public List<Link> Links { get; set; }
