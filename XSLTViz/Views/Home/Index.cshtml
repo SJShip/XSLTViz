@@ -12,17 +12,24 @@
 
 	<script type="text/javascript" src="http://code.jquery.com/jquery-3.3.1.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js"></script>
+	<script type="text/javascript" src="@Url.Content("~/Scripts/prettify.js")"></script>
 	<script type="text/javascript" src="@Url.Content("~/Scripts/main.js")"></script>
 	<script type="text/javascript" src="@Url.Content("~/Scripts/split.min.js")"></script>
 
 	<link rel="stylesheet" href="@Url.Content("~/Content/styles.css")" type="text/css" />
+	<link rel="stylesheet" href="@Url.Content("~/Content/prettify.css")" type='text/css' />
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 	<title>Index</title>
 </head>
 <body>
 	<div id="content">
 		<div id="toolbar"></div>
-		<div id="left_pane" class="split split-horizontal"></div>
+		<div id="left_pane" class="split split-horizontal">
+			<h3 class="title"></h3>
+			<pre class="prettyprint lang-xml">
+
+			</pre>
+		</div>
 		<div id="viewport" class="split split-horizontal">
 			<svg>
 				<defs>

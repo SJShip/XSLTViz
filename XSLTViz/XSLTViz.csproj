@@ -126,6 +126,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\grips\horizontal.png" />
     <Content Include="Content\grips\vertical.png" />
+    <Content Include="Content\prettify.css" />
     <Content Include="Scripts\main.js" />
     <Content Include="Content\styles.css" />
     <Content Include="Global.asax" />

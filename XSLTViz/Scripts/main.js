@@ -14,6 +14,25 @@
 		};
 	}
 
+	var entityMap = {
+		'&': '&amp;',
+		'<': '&lt;',
+		'>': '&gt;',
+		'"': '&quot;',
+		"'": '&#39;',
+		'/': '&#x2F;',
+		'`': '&#x60;',
+		'=': '&#x3D;'
+	};
+
+	function escapeHtml(string)
+	{
+		return String(string).replace(/[&<>"'`=\/]/g, function (s)
+		{
+			return entityMap[s];
+		});
+	}
+
 	var
 		w = document.documentElement.clientWidth,
 		h = document.documentElement.clientHeight;
@@ -23,6 +42,8 @@
 	});
 
 	var rightPane = $("#right_pane");
+	var codePlaceHolder = $("#left_pane > pre");
+	var codeTitle = $("#left_pane > h3.title");
 	var chkShowLeaves = $("#highlight_leaves");
 	chkShowLeaves.on("change", function ()
 	{
@@ -46,7 +67,7 @@
 			d3.selectAll("line.link").attr("style", function ()
 			{
 				var id = $(this).attr("id");
-				return "stroke: url({0});".f(id.replace("l_", "gr_"));
+				return "stroke: url(#{0});".f(id.replace("l_", "gr_"));
 			});
 		} else
 		{
@@ -207,7 +228,7 @@
 	};
 
 	window.addEventListener("resize", adjustBoundaries);
-	window.addEventListener("mousewheel", mouseWheelHandler);
+	canvas[0][0].addEventListener("mousewheel", mouseWheelHandler);
 	canvas[0][0].addEventListener("mousedown", mouseDownHandler);
 	canvas[0][0].addEventListener("mouseup", mouseUpHandler);
 
@@ -287,9 +308,29 @@
 		});
 	}
 
+	function getFileContent(d)
+	{
+		codeTitle.text(d.name);
+		$.ajax({
+			method: "GET",
+			url: "api/files/{0}/content".f(d.id),
+			success: function (data)
+			{
+				codePlaceHolder.html(escapeHtml(data));
+				codePlaceHolder.removeClass("prettyprinted");
+				PR.prettyPrint();
+			},
+			error: function (e)
+			{
+				console.log(e);
+			}
+		});
+	}
+
 	function dblclick(d)
 	{
 		$(".highlighted").removeClass("highlighted");
+		$(".head").removeClass("head");
 
 		d.fixed = false;
 		d3.select(this).classed("fixed", d.fixed = false);
@@ -299,6 +340,7 @@
 	function dragstart(d)
 	{
 		$(".highlighted").removeClass("highlighted");
+		$(".head").removeClass("head");
 
 		d3.select(this).classed("fixed", d.fixed = true);
 	}
@@ -306,12 +348,14 @@
 	function dragend(d)
 	{
 		$(".highlighted").removeClass("highlighted");
+		$(".head").removeClass("head");
 
 		var $this = $(this.childNodes[0]);
 		d.fixed = true;
 		d.x = Number($this.attr("cx"));
 		d.y = Number($this.attr("cy"));
 		updateFile(d);
+		getFileContent(d);
 	}
 
 	function markRequiredElements(d)
@@ -323,6 +367,9 @@
 			success: function (data)
 			{
 				$(".highlighted").removeClass("highlighted");
+				$(".head").removeClass("head");
+
+				$("g[data-id='{0}']".f(d.id)).addClass("head");
 				
 				data.nodes.forEach(function (node)
 				{
@@ -333,6 +380,8 @@
 				{
 					$("#l_{0}_{1}".f(link.source, link.target)).addClass("highlighted");
 				});
+
+
 			},
 			error: function (e)
 			{
@@ -413,7 +462,10 @@
 
 			var force = d3.layout.force()
 				.size([w, h])
-				.charge(-50)
+				.charge(function (d)
+				{
+					return -30;
+				})
 				.linkDistance(0.1)
 				.nodes(graph.nodes)
 				.links(graph.links)

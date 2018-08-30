@@ -39,5 +39,20 @@ namespace XSLTViz.Controllers
                 return response;
             }
         }
+
+
+        [Route("api/files/{fileId}/content")]
+        [HttpGet]
+        public string GetFileContent(int fileId)
+        {
+            using (var context = new DataContext())
+            {
+                var fileContent = (from f in context.Files
+                            where f.Id == fileId
+                            select f.Content).First();
+
+                return fileContent;
+            }
+        }
     }
 }
