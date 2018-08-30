@@ -319,6 +319,7 @@
 				codePlaceHolder.html(escapeHtml(data));
 				codePlaceHolder.removeClass("prettyprinted");
 				PR.prettyPrint();
+				codePlaceHolder.show();
 			},
 			error: function (e)
 			{

@@ -130,6 +130,8 @@
     <Content Include="Scripts\main.js" />
     <Content Include="Content\styles.css" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\prettify.js" />
+    <Content Include="Scripts\split.min.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
