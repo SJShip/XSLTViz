@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using XSLTViz.DataModel;
 
 namespace XSLTViz.APIModels
@@ -33,6 +34,7 @@ namespace XSLTViz.APIModels
         {
             Id = file.Id;
             Name = file.Path;
+            Size = (long)Math.Ceiling(Convert.ToDecimal(file.Content.Length / 4000)) + 1;
 
             if (file.Point.X != null && file.Point.Y != null)
             {

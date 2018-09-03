@@ -555,6 +555,13 @@
 				{
 					return d.name;
 				})
+				.attr("style", function (d)
+				{
+					if (project.settings.show_size)
+					{
+						return "font-size: {0}pt".f(d.size);
+					}
+				})
 				.select(function ()
 				{
 					return this.parentNode;
