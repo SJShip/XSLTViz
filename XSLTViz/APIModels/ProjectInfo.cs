@@ -13,6 +13,7 @@ namespace XSLTViz.APIModels
 
         public ProjectInfo(Project project, int totalFiles)
         {
+				this.Id = project.Id - 1;
             this.Settings = project.Settings;
             this.TotalFiles = totalFiles;
             this.ProjectName = project.ProjectName;

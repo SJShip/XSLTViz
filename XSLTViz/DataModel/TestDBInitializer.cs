@@ -13,22 +13,25 @@ namespace XSLTViz.DataModel
     {
         protected override void Seed(DataContext context)
         {
-            var testProject = context.Projects.Add(new Project { ProjectName="TestProject", Settings = new Settings { } });
-            var filesLocation = ConfigurationManager.AppSettings["filesLocation"];
-            var files = Directory.GetFiles(filesLocation);
-            foreach (var filePath in files)
+            for (var i = 0; i < 2; i++)
             {
-                if (filePath.EndsWith(".xsl") || filePath.EndsWith(".xslt"))
+                var testProject = context.Projects.Add(new Project { ProjectName = "project_" + (i+1), Settings = new Settings { } });
+                var filesLocation = ConfigurationManager.AppSettings["filesLocation"];
+                var files = Directory.GetFiles(filesLocation);
+                foreach (var filePath in files)
                 {
-                    var content = System.IO.File.ReadAllText(filePath);
-                    var lIndex = filePath.LastIndexOf("\\");
-                    var shortPath = filePath.Substring(lIndex + 1);
-                    context.Files.Add(new File { Content = content, Path = shortPath, Project = testProject, Point = new Point() });
+                    if (filePath.EndsWith(".xsl") || filePath.EndsWith(".xslt"))
+                    {
+                        var content = System.IO.File.ReadAllText(filePath);
+                        var lIndex = filePath.LastIndexOf("\\");
+                        var shortPath = filePath.Substring(lIndex + 1);
+                        context.Files.Add(new File { Content = content, Path = shortPath, Project = testProject, Point = new Point() });
+                    }
                 }
-            }
-            context.SaveChanges();
+                context.SaveChanges();
 
-            ParseFactory.ParseProject(context, testProject);
+                ParseFactory.ParseProject(context, testProject);
+            }
 
 
             base.Seed(context);

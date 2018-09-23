@@ -113,6 +113,13 @@
 		undockProjectNodes();
 	});
 
+	$("#selectView a.dropdown-item").on("click", function (e)
+	{
+		e.preventDefault();
+		var projectId = $(this).attr("data-id");
+		loadProject(projectId);
+	});
+
 
 
 	var project = null;
@@ -133,7 +140,7 @@
 	var initialWidth = w * 3;
 	var initialHeight = h * 3;
 
-	var zoomStep = 0.05;
+	var zoomStep = 0.1;
 	var zoomIn = function ()
 	{
 		var viewBoxParams = canvas.attr("viewBox").split(" ");

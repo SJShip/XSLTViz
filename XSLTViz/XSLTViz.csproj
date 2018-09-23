@@ -16,7 +16,7 @@
     <RootNamespace>XSLTViz</RootNamespace>
     <AssemblyName>XSLTViz</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <UseIISExpress>true</UseIISExpress>
+    <UseIISExpress>false</UseIISExpress>
     <Use64BitIISExpress />
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -127,6 +127,7 @@
     <Content Include="Content\grips\horizontal.png" />
     <Content Include="Content\grips\vertical.png" />
     <Content Include="Content\prettify.css" />
+    <Content Include="Scripts\d3.js" />
     <Content Include="Scripts\main.js" />
     <Content Include="Content\styles.css" />
     <Content Include="Global.asax" />

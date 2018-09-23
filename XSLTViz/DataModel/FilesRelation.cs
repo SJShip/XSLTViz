@@ -12,15 +12,15 @@ namespace XSLTViz.DataModel
         Import
     }
 
-    public class FilesRelation
-    {
-        public int Id { get; set; }
+	public class FilesRelation
+	{
+		public int Id { get; set; }
 
-        public File Source { get; set; }
+		public File Source { get; set; }
 
-        public File Target { get; set; }
+		public File Target { get; set; }
 
-        [Required]
-        public FilesRelationMode Mode {get; set;}
-    }
+		[Required]
+		public FilesRelationMode Mode { get; set; }
+	}
 }
