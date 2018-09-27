@@ -8,6 +8,17 @@ namespace XSLTViz.DataModel
 {
 	public static class ParseFactory
 	{
+		public static List<int> ProcessedFiles;
+		public static Dictionary<int, List<Template>> ImportTemplateScope;
+		public static Dictionary<int, List<Template>> IncludeTemplateScope;
+
+		static ParseFactory()
+		{
+			ProcessedFiles = new List<int>();
+			ImportTemplateScope = new Dictionary<int, List<Template>>();
+			IncludeTemplateScope = new Dictionary<int, List<Template>>();
+		}
+
 		public static void ParseTemplateData(DataContext context, XmlNode templateNode, Template template, XmlNamespaceManager nsMgr)
 		{
 			var callList = new List<TemplateCall>();
@@ -61,7 +72,8 @@ namespace XSLTViz.DataModel
 
 				if (!callList.Any(t => t.Selector == TemplateSelector.Match && t.SelectorValue == match && t.ForImports && t.Mode == mode))
 				{
-					callList.Add(new TemplateCall {
+					callList.Add(new TemplateCall
+					{
 						Mode = mode,
 						Selector = TemplateSelector.Match,
 						SelectorValue = match,
@@ -101,7 +113,7 @@ namespace XSLTViz.DataModel
 			}
 
 			var includeNodes = xmlDoc.SelectNodes("//xsl:include", nsmgr);
-			for (var i = 0; i< includeNodes.Count; i++)
+			for (var i = 0; i < includeNodes.Count; i++)
 			{
 				XmlNode includeNode = includeNodes[i];
 				var includePath = includeNode.Attributes["href"].Value;
@@ -118,9 +130,9 @@ namespace XSLTViz.DataModel
 			var templates = xmlDoc.SelectNodes("//xsl:template", nsmgr);
 			foreach (XmlNode templateNode in templates)
 			{
-				var match = templateNode.Attributes["match"] != null? templateNode.Attributes["match"].Value: "";
-				var name = templateNode.Attributes["name"] != null ? templateNode.Attributes["name"].Value: "";
-				var mode = templateNode.Attributes["mode"] !=null? templateNode.Attributes["mode"].Value: "";
+				var match = templateNode.Attributes["match"] != null ? templateNode.Attributes["match"].Value : "";
+				var name = templateNode.Attributes["name"] != null ? templateNode.Attributes["name"].Value : "";
+				var mode = templateNode.Attributes["mode"] != null ? templateNode.Attributes["mode"].Value : "";
 
 				TemplateSelector selector = match.Length > 0 ? TemplateSelector.Match : TemplateSelector.Name;
 				var template = new Template
@@ -139,31 +151,141 @@ namespace XSLTViz.DataModel
 
 		public static void ProcessTemplates(DataContext context, int fileId)
 		{
-			var importedTemplates = GetImportedTemplates(context, fileId);
-			var includedTemplates = GetIncludedTemplates(context, fileId);
+			var importedFileIds = (from f in context.FilesRelations
+										  where f.Target.Id == fileId && f.Mode == FilesRelationMode.Import
+										  orderby f.Order
+										  select f.Source.Id
+										 ).ToList();
+
+			var includedFileIds = (from f in context.FilesRelations
+										  where f.Target.Id == fileId && f.Mode == FilesRelationMode.Include
+										  orderby f.Order
+										  select f.Source.Id).ToList();
+
+			var importTemplates = new List<Template>();
+			foreach (var file in importedFileIds)
+			{
+				if (!ProcessedFiles.Contains(file))
+				{
+					ProcessTemplates(context, file);
+				}
+
+				if (ImportTemplateScope.ContainsKey(file))
+				{
+					foreach (var template in ImportTemplateScope[file])
+					{
+						var elem = importTemplates.FirstOrDefault(t => t.Selector == template.Selector &&
+							t.SelectorValue == template.SelectorValue && t.Mode == template.Mode);
+
+						if (elem != null)
+						{
+							var index = importTemplates.IndexOf(elem);
+							importTemplates[index] = template;
+						}
+						else
+						{
+							importTemplates.Add(template);
+						}
+					}
+				}
+			}
+			if (importTemplates.Count > 0)
+			{
+				ImportTemplateScope[fileId] = importTemplates;
+			}
+
+			var includeTemplates = new List<Template>();
+			foreach (var file in includedFileIds)
+			{
+				if (!ProcessedFiles.Contains(file))
+				{
+					ProcessTemplates(context, file);
+				}
+
+				if (IncludeTemplateScope.ContainsKey(file))
+				{
+					foreach (var template in IncludeTemplateScope[file])
+					{
+						var elem = includeTemplates.FirstOrDefault(t => t.Selector == template.Selector &&
+							t.SelectorValue == template.SelectorValue && t.Mode == template.Mode);
+
+						if (elem != null)
+						{
+							var index = includeTemplates.IndexOf(elem);
+							includeTemplates[index] = template;
+						}
+						else
+						{
+							includeTemplates.Add(template);
+						}
+					}
+				}
+			}
 
 			var fileTemplates = (from t in context.Templates
 										where t.File.Id == fileId
 										select t).ToList();
+
+			foreach (var template in fileTemplates)
+			{
+				var elem = includeTemplates.FirstOrDefault(t => t.Selector == template.Selector &&
+					t.SelectorValue == template.SelectorValue && t.Mode == template.Mode);
+
+				if (elem != null)
+				{
+					var index = includeTemplates.IndexOf(elem);
+					includeTemplates[index] = template;
+				}
+				else
+				{
+					includeTemplates.Add(template);
+				}
+			}
+
+			if (includeTemplates.Count > 0)
+			{
+				IncludeTemplateScope[fileId] = includeTemplates;
+			}
+
+			// Find the template for root node
+			var rootTemplate = includeTemplates.LastOrDefault(t => t.Selector == TemplateSelector.Match && t.SelectorValue == "/" && t.Mode.Length == 0);
+			if (rootTemplate == null)
+			{
+				rootTemplate = importTemplates.LastOrDefault(t => t.Selector == TemplateSelector.Match && t.SelectorValue == "/" && t.Mode.Length == 0);
+			}
+
+			Stack<Template> templateStack = new Stack<Template>();
+			if (rootTemplate != null)
+			{
+				templateStack.Push(rootTemplate);
+			}
+
+			while (templateStack.Count > 0)
+			{
+				var current = templateStack.Pop();
+				var calls = (from call in context.TemplateCalls
+								  where call.Template.Id == current.Id
+								  select call).ToList();
+
+			}
+
 
 			List<TemplateCall> fileTemplateCalls = new List<TemplateCall>();
 
 			foreach (var t in fileTemplates)
 			{
 				var tCalls = (from call in context.TemplateCalls
-												  where call.Template.Id == t.Id
-												  select call).ToList();
+								  where call.Template.Id == t.Id
+								  select call).ToList();
 				fileTemplateCalls.AddRange(tCalls);
 			}
-
-			
 		}
 
 		public static void GenerateTemplateRelations(DataContext context, int projectId)
 		{
 			var entryPoints = (from f in context.Files
-													 where f.Project.Id == projectId && f.Path.EndsWith(".xsl")
-													 select f).ToList();
+									 where f.Project.Id == projectId && f.Path.EndsWith(".xsl")
+									 select f).ToList();
 
 			foreach (var file in entryPoints)
 			{
