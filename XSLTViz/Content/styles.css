@@ -11,6 +11,18 @@ body {
 	overflow: hidden;
 }
 
+#left_pane {
+	white-space: nowrap;
+}
+
+#btnBuildTree {
+	margin: 10px;
+}
+
+#left_pane span.title {
+	font-size: 16pt;
+}
+
 #left_pane > pre {
 	display: none;
 	font-size: 10pt;

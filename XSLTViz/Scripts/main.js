@@ -37,13 +37,13 @@
 		w = document.documentElement.clientWidth,
 		h = document.documentElement.clientHeight;
 
-	Split(['#left_pane', '#viewport', '#right_pane'], {
+	var splitInstance = Split(['#left_pane', '#viewport', '#right_pane'], {
 		sizes: [1, 98, 1]
 	});
 
 	var rightPane = $("#right_pane");
 	var codePlaceHolder = $("#left_pane > pre");
-	var codeTitle = $("#left_pane > h3.title");
+	var codeTitle = $("#left_pane > span.title");
 	var chkShowLeaves = $("#highlight_leaves");
 	chkShowLeaves.on("change", function ()
 	{
@@ -99,6 +99,12 @@
 		{
 			loadProject(project.id + 1);
 		});
+	});
+
+	var btnBuildTreeView = $("#btnBuildTree");
+	btnBuildTreeView.on("click", function ()
+	{
+
 	});
 
 	var btnUndockNodes = $("#btnUndockNodes");
@@ -343,6 +349,7 @@
 			url: "api/files/{0}/content".f(d.id),
 			success: function (data)
 			{
+				btnBuildTreeView.show();
 				codePlaceHolder.html(escapeHtml(data));
 				codePlaceHolder.removeClass("prettyprinted");
 				PR.prettyPrint();
@@ -398,7 +405,7 @@
 				$(".head").removeClass("head");
 
 				$("g[data-id='{0}']".f(d.id)).addClass("head");
-				
+
 				data.nodes.forEach(function (node)
 				{
 					$("g[data-id='{0}']".f(node.id)).addClass("highlighted");
@@ -471,6 +478,180 @@
 			{
 				console.log(e);
 			}
+		});
+	}
+
+	function buildTreeView(fileData)
+	{
+		// Use default size for teh canvas
+		canvas.attr("viewBox", "0 0 {0} {1}".f(w, h));
+
+		d3.json("api/graph/treeview/{0}".f(fileData.id + 1), function (graph)
+		{
+			// Clears canvas data excepts <defs>
+			canvas.selectAll("g.node").remove();
+			canvas.selectAll("line.link").remove();
+			canvas.selectAll("linearGradient[x1]").remove();
+
+			var force = d3.layout.force()
+				.size([w, h])
+				.charge(-50)
+				.linkDistance(function (d)
+				{
+					return 0.1;
+				})
+				.nodes(graph.nodes)
+				.links(graph.links)
+				.start();
+
+			// Create all the line svgs but without locations yet
+			var link = canvas.selectAll(".link")
+				.data(graph.links)
+				.enter().append("line")
+				.attr("class", "link")
+				.attr("id", function (d)
+				{
+					return "l_{0}_{1}".f(d.source.id, d.target.id);
+				})
+				.style("stroke-width", function (d)
+				{
+					return Math.sqrt(d.value);
+				});
+
+			var linkGradient = defs.selectAll(".gr").data(graph.links).enter()
+				.append("linearGradient")
+				.attr("id", function (d) { return "gr_{0}_{1}".f(d.source.id, d.target.id); })
+				.attr("xlink:href", "#color_edge");
+
+			// Do the same with the circles for the nodes - no 
+			var node = canvas.selectAll(".node")
+				.data(graph.nodes)
+				.enter().append("g")
+				.attr("class", function (d)
+				{
+					var classes = ["node"];
+					if (d.fixed)
+					{
+						classes.push("fixed");
+					}
+					return classes.join(" ");
+				})
+				.attr("data-id", function (d)
+				{
+					return d.id;
+				})
+				.append("circle")
+				.attr("data-leaf", function (d)
+				{
+					return d.leaf;
+				})
+				.attr("r", function (d)
+				{
+					if (project.settings.show_size)
+					{
+						return d.size * 2;
+					}
+					return 3;
+				})
+				.select(function ()
+				{
+					return this.parentNode;
+				})
+				.append("text").text(function (d)
+				{
+					return d.name;
+				})
+				.attr("style", function (d)
+				{
+					if (project.settings.show_size)
+					{
+						return "font-size: {0}pt".f(d.size);
+					}
+				})
+				.select(function ()
+				{
+					return this.parentNode;
+				})
+				.on("dblclick", dblclick)
+				.on("mouseover", function (d)
+				{
+					if (event && event.shiftKey)
+					{
+						markRequiredElements(d);
+					}
+				})
+				.call(drag);
+
+			// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
+			force.on("tick", function ()
+			{
+				link.attr("x1", function (d)
+				{
+					return d.source.x;
+				})
+					.attr("y1", function (d)
+					{
+						return d.source.y;
+					})
+					.attr("x2", function (d)
+					{
+						return d.target.x;
+					})
+					.attr("y2", function (d)
+					{
+						return d.target.y;
+					});
+
+				linkGradient.attr("x1", function (d)
+				{
+					return getGradientParams(d).x1;
+				})
+					.attr("y1", function (d)
+					{
+						return getGradientParams(d).y1;
+					})
+					.attr("x2", function (d)
+					{
+						return getGradientParams(d).x2;
+					})
+					.attr("y2", function (d)
+					{
+						return getGradientParams(d).y2;
+					});
+
+				if (project.settings.color_direction)
+				{
+					link.attr("style", function (d)
+					{
+						return "stroke: url(\"#gr_{0}_{1}\");".f(d.source.id, d.target.id);
+					});
+				} else
+				{
+					link.attr("style", "");
+				}
+
+				node.select(function () { return this.childNodes[0]; })
+					.attr("cx", function (d)
+					{
+						return d.x;
+					})
+					.attr("cy", function (d)
+					{
+						return d.y;
+					})
+					.select(function ()
+					{
+						return this.parentNode.childNodes[1];
+					})
+					.attr("x", function (d)
+					{
+						return d.x;
+					})
+					.attr("y", function (d)
+					{
+						return d.y + 0.5;
+					});
+			});
 		});
 	}
 

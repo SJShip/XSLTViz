@@ -16,6 +16,8 @@ namespace XSLTViz.DataModel
 	{
 		public int Id { get; set; }
 
+		public int Order { get; set; }
+
 		public File Source { get; set; }
 
 		public File Target { get; set; }

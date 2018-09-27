@@ -104,5 +104,13 @@ namespace XSLTViz.Controllers
                 Links = links
             };
         }
+
+		//[Route("api/graph/treeview/{fileId}")]
+		//[HttpGet]
+		//public Graph GetTreeView(int fileId)
+		//{
+		//	var nodes = new List<Node>();
+		//	var links = new List<Link>();
+		//}
     }
 }
