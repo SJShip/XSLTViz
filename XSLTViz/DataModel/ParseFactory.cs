@@ -137,8 +137,25 @@ namespace XSLTViz.DataModel
 			}
 		}
 
-		public static void ProcessTemplates(DataContext context, File file)
+		public static void ProcessTemplates(DataContext context, int fileId)
 		{
+			var importedTemplates = GetImportedTemplates(context, fileId);
+			var includedTemplates = GetIncludedTemplates(context, fileId);
+
+			var fileTemplates = (from t in context.Templates
+										where t.File.Id == fileId
+										select t).ToList();
+
+			List<TemplateCall> fileTemplateCalls = new List<TemplateCall>();
+
+			foreach (var t in fileTemplates)
+			{
+				var tCalls = (from call in context.TemplateCalls
+												  where call.Template.Id == t.Id
+												  select call).ToList();
+				fileTemplateCalls.AddRange(tCalls);
+			}
+
 			
 		}
 
@@ -150,7 +167,7 @@ namespace XSLTViz.DataModel
 
 			foreach (var file in entryPoints)
 			{
-				ProcessTemplates(context, file);
+				ProcessTemplates(context, file.Id);
 			}
 			context.SaveChanges();
 		}
