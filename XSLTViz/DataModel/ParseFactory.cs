@@ -266,7 +266,10 @@ namespace XSLTViz.DataModel
 				var calls = (from call in context.TemplateCalls
 								  where call.Template.Id == current.Id
 								  select call).ToList();
-
+				foreach (var call in calls)
+				{
+					
+				}
 			}
 
 
