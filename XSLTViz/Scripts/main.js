@@ -101,6 +101,18 @@
 		});
 	});
 
+	var chkBundleEdges = $("#bundle_edges");
+	chkBundleEdges.on("change", function ()
+	{
+		if (this.checked)
+		{
+			bundleEdges(project.id + 1);
+		} else 
+		{
+			loadProject(project.id + 1);
+		}
+	});
+
 	var btnBuildTreeView = $("#btnBuildTree");
 	btnBuildTreeView.on("click", function ()
 	{
@@ -425,6 +437,98 @@
 		});
 	}
 
+	function bundleEdges(projectId)
+	{
+		document.force.stop();
+
+		var line = d3.svg.line()
+			.interpolate("bundle")
+			.tension(.95)
+			.x(function (d)
+			{
+				return d.x;
+			})
+			.y(function (d)
+			{
+				return d.y;
+			});
+
+		// Load project data
+		$.ajax({
+			method: "GET",
+			url: "api/graph/{0}/trees".f(projectId),
+			contentType: "application/json",
+			success: function (trees)
+			{
+				map = {};
+
+				links = [];
+
+				var bundle = d3.layout.bundle();
+
+				var root = { name: "", children: [] , x: 0, y: 0};
+
+
+				trees.forEach(function (elem)
+				{
+					if (!map[elem.name])
+					{
+						map[elem.name] = elem;
+					}
+					var circle = $("g[data-id='{0}'] > circle".f(elem.id));
+					var x = parseFloat(circle.attr("cx"));
+					var y = parseFloat(circle.attr("cy"));
+					elem.x = x;
+					elem.y = y;
+				});
+
+				trees.forEach(function (elem)
+				{
+					if (elem.children && elem.children.length)
+					{
+						elem.children.forEach(function (importElem)
+						{
+							map[importElem].parent = elem;
+							links.push({ source: elem, target: map[importElem] });
+						});
+					}
+				});
+
+
+				trees.forEach(function (elem)
+				{
+					if (!elem.parent)
+					{
+						elem.parent = root;
+						root.children.push(elem);
+					}
+				});
+
+				trees.unshift(root);
+
+				//links = links.filter(l => l.source.parent.name != "" && l.target.parent.name != "");
+
+				$("line.link", canvas[0][0]).css("display", "none");
+
+				var stroke = d3.scale.linear()
+					.domain([0, 1e4])
+					.range(["brown", "steelblue"]);
+
+				canvas.selectAll(".path")
+					.data(bundle(links))
+					.enter().append("path")
+					.attr("class", "path")
+					.attr("d", line)
+					.style("stroke", function (d) { return stroke(d[0].value); });
+					
+			},
+			error: function (e)
+			{
+				console.log(e);
+			}
+		});
+	}
+
 	function loadProject(projectId)
 	{
 		rightPane.css("visibility", "hidden");
@@ -493,7 +597,7 @@
 			canvas.selectAll("line.link").remove();
 			canvas.selectAll("linearGradient[x1]").remove();
 
-			var force = d3.layout.force()
+			document.force = d3.layout.force()
 				.size([w, h])
 				.charge(-50)
 				.linkDistance(function (d)
@@ -583,7 +687,7 @@
 				.call(drag);
 
 			// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-			force.on("tick", function ()
+			document.force.on("tick", function ()
 			{
 				link.attr("x1", function (d)
 				{
@@ -671,7 +775,7 @@
 			canvas.selectAll("line.link").remove();
 			canvas.selectAll("linearGradient[x1]").remove();
 
-			var force = d3.layout.force()
+			document.force = d3.layout.force()
 				.size([w, h])
 				.charge(-50)
 				.linkDistance(function (d)
@@ -682,7 +786,7 @@
 				.links(graph.links)
 				.start();
 
-			var drag = force.drag()
+			var drag = document.force.drag()
 				.on("dragstart", dragstart)
 				.on("dragend", dragend);
 
@@ -765,7 +869,7 @@
 				.call(drag);
 
 			// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-			force.on("tick", function ()
+			document.force.on("tick", function ()
 			{
 				link.attr("x1", function (d)
 				{

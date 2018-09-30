@@ -105,6 +105,42 @@ namespace XSLTViz.Controllers
             };
         }
 
+		[Route("api/graph/{projectId}/trees")]
+		[HttpGet]
+		public List<TreeNode> GetTrees(int projectId)
+		{
+			var nodes = new List<TreeNode>();
+
+			using (var context = new DataContext())
+			{
+				var files = (from f in context.Files
+								 where f.Project.Id == projectId
+								 select f).ToList();
+
+
+
+				foreach (var file in files)
+				{
+					var node = new TreeNode(file);
+
+					var imports = (from f in context.FilesRelations
+										where f.Target.Id == file.Id
+										select f).ToList();
+
+					List<string> importNodes = new List<string>();
+					foreach (var importFile in imports)
+					{
+						importNodes.Add(importFile.Source.Path);
+					}
+
+					node.Imports = importNodes;
+					nodes.Add(node);
+				}
+
+			}
+			return nodes;
+		}
+
 		//[Route("api/graph/treeview/{fileId}")]
 		//[HttpGet]
 		//public Graph GetTreeView(int fileId)

@@ -14,4 +14,13 @@ namespace XSLTViz.APIModels
         [JsonProperty(PropertyName = "nodes")]
         public List<Node> Nodes { get; set; }
     }
+
+	public class Tree
+	{
+		[JsonProperty(PropertyName = "nodes")]
+		public List<TreeNode> Nodes { get; set; }
+
+		[JsonProperty(PropertyName = "links")]
+		public List<TreeLink> Links { get; set; }
+	}
 }

@@ -310,7 +310,7 @@ namespace XSLTViz.DataModel
 			}
 			context.SaveChanges();
 
-			GenerateTemplateRelations(context, project.Id);
+			//GenerateTemplateRelations(context, project.Id);
 		}
 	}
 }
