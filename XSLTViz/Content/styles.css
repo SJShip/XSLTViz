@@ -142,3 +142,8 @@ g.node.fixed circle {
 		height: 100%;
 		float: left;
 	}
+
+div.dropdown-menu {
+	max-height: 400px;
+	overflow-y: auto;
+}
