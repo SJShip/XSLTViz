@@ -13,53 +13,53 @@ using XSLTViz.DataModel;
 
 namespace XSLTViz
 {
-    public class Global : System.Web.HttpApplication
-    {
+	public class Global : System.Web.HttpApplication
+	{
 
-        protected void Application_Start(object sender, EventArgs e)
-        {
-            GlobalConfiguration.Configure(WebApiConfig.Register);
+		protected void Application_Start(object sender, EventArgs e)
+		{
+			GlobalConfiguration.Configure(WebApiConfig.Register);
 
-            AreaRegistration.RegisterAllAreas();
-            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
-            RouteConfig.RegisterRoutes(RouteTable.Routes);
+			AreaRegistration.RegisterAllAreas();
+			FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+			RouteConfig.RegisterRoutes(RouteTable.Routes);
 
-				Database.SetInitializer(new TestDBInitializer());
+			Database.SetInitializer(new TestDBInitializer());
 
-				using (var context = new DataContext())
-				{
-					context.Database.Initialize(force: true);
-				}
+			using (var context = new DataContext())
+			{
+				context.Database.Initialize(force: true);
+			}
 		}
 
-        protected void Session_Start(object sender, EventArgs e)
-        {
+		protected void Session_Start(object sender, EventArgs e)
+		{
 
-        }
+		}
 
-        protected void Application_BeginRequest(object sender, EventArgs e)
-        {
+		protected void Application_BeginRequest(object sender, EventArgs e)
+		{
 
-        }
+		}
 
-        protected void Application_AuthenticateRequest(object sender, EventArgs e)
-        {
+		protected void Application_AuthenticateRequest(object sender, EventArgs e)
+		{
 
-        }
+		}
 
-        protected void Application_Error(object sender, EventArgs e)
-        {
+		protected void Application_Error(object sender, EventArgs e)
+		{
 
-        }
+		}
 
-        protected void Session_End(object sender, EventArgs e)
-        {
+		protected void Session_End(object sender, EventArgs e)
+		{
 
-        }
+		}
 
-        protected void Application_End(object sender, EventArgs e)
-        {
+		protected void Application_End(object sender, EventArgs e)
+		{
 
-        }
-    }
+		}
+	}
 }

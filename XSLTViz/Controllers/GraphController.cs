@@ -57,12 +57,12 @@ namespace XSLTViz.Controllers
 
         [Route("api/graph/{fileId}/path")]
         [HttpGet]
-        public Graph GetPath(int fileId)
+        public Path GetPath(int fileId)
         {
-            var nodes = new List<Node>();
+            var nodes = new List<int>();
             var links = new List<Link>();
 
-            var stack = new Stack<Node>();
+            var stack = new Stack<int>();
             
             using (var context = new DataContext())
             {
@@ -73,12 +73,12 @@ namespace XSLTViz.Controllers
                 if (file != null)
                 {
                     var node = new Node(file);
-                    stack.Push(node);
+                    stack.Push(node.Id);
                 }
 
                 while (stack.Count > 0)
                 {
-                    Node current = stack.Pop();
+                    int current = stack.Pop();
 
                     if (nodes.IndexOf(current) == -1)
                     {
@@ -86,20 +86,20 @@ namespace XSLTViz.Controllers
                     }
 
                     var neighbors = (from fr in context.FilesRelations
-                                     where fr.Target.Id == current.Id
+                                     where fr.Target.Id == current
                                      select fr.Source).ToList();
                     foreach (var n in neighbors)
                     {
                         var node = new Node(n);
-                        stack.Push(node);
+                        stack.Push(node.Id);
 
-                        links.Add(new Link { Source = node.Id, Target = current.Id });
+                        links.Add(new Link { Source = node.Id, Target = current });
                     }
                 }
             }
 
-            return new Graph
-            {
+            return new Path
+				{
                 Nodes = nodes,
                 Links = links
             };

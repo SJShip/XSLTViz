@@ -299,7 +299,7 @@
 		$.ajax({
 			method: "PATCH",
 			contentType: "application/json",
-			url: "api/files/" + d.id,
+			url: "./XSLTViz/api/files/" + d.id,
 			data: JSON.stringify(d),
 			error: function (e)
 			{
@@ -321,7 +321,7 @@
 		var ajaxOptions = {
 			method: "PATCH",
 			contentType: "application/json",
-			url: "api/projects/{0}".f(project.id + 1),
+			url: "./XSLTViz/api/projects/{0}".f(project.id + 1),
 			data: JSON.stringify(settings),
 			error: function (e)
 			{
@@ -341,7 +341,7 @@
 	{
 		$.ajax({
 			method: "PATCH",
-			url: "api/projects/{0}/undock".f(project.id + 1),
+			url: "./XSLTViz/api/projects/{0}/undock".f(project.id + 1),
 			success: function ()
 			{
 				loadProject(project.id + 1);
@@ -358,7 +358,7 @@
 		codeTitle.text(d.name);
 		$.ajax({
 			method: "GET",
-			url: "api/files/{0}/content".f(d.id),
+			url: "./XSLTViz/api/files/{0}/content".f(d.id),
 			success: function (data)
 			{
 				btnBuildTreeView.show();
@@ -409,7 +409,7 @@
 	{
 		$.ajax({
 			method: "GET",
-			url: "api/graph/{0}/path".f(d.id),
+			url: "./XSLTViz/api/graph/{0}/path".f(d.id),
 			contentType: "application/json",
 			success: function (data)
 			{
@@ -420,7 +420,7 @@
 
 				data.nodes.forEach(function (node)
 				{
-					$("g[data-id='{0}']".f(node.id)).addClass("highlighted");
+					$("g[data-id='{0}']".f(node)).addClass("highlighted");
 				});
 
 				data.links.forEach(function (link)
@@ -456,7 +456,7 @@
 		// Load project data
 		$.ajax({
 			method: "GET",
-			url: "api/graph/{0}/trees".f(projectId),
+			url: "./XSLTViz/api/graph/{0}/trees".f(projectId),
 			contentType: "application/json",
 			success: function (trees)
 			{
@@ -535,7 +535,7 @@
 		// Load project data
 		$.ajax({
 			method: "GET",
-			url: "api/projects/" + projectId,
+			url: "./XSLTViz/api/projects/" + projectId,
 			contentType: "application/json",
 			success: function (data)
 			{
@@ -590,7 +590,7 @@
 		// Use default size for teh canvas
 		canvas.attr("viewBox", "0 0 {0} {1}".f(w, h));
 
-		d3.json("api/graph/treeview/{0}".f(fileData.id + 1), function (graph)
+		d3.json("./XSLTViz/api/graph/treeview/{0}".f(fileData.id + 1), function (graph)
 		{
 			// Clears canvas data excepts <defs>
 			canvas.selectAll("g.node").remove();
@@ -768,7 +768,7 @@
 		}
 
 		// Load graph data
-		d3.json("api/graph/{0}".f(projectData.id + 1), function (graph)
+		d3.json("./XSLTViz/api/graph/{0}".f(projectData.id + 1), function (graph)
 		{
 			// Clears canvas data excepts <defs>
 			canvas.selectAll("g.node").remove();

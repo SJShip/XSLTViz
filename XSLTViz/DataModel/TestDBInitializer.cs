@@ -42,24 +42,23 @@ namespace XSLTViz.DataModel
 
 					var newProject = context.Projects.Add(new Project { ProjectName = shortPath, Settings = new Settings { } });
 
-					var nodes = new List<Node>();
+					var nodes = new List<int>();
 
 
 					var file = (from f in context.Files
 									where f.Path == shortPath && f.Project.Id == defaultProject.Id
 									select f).FirstOrDefault();
 
-					var stack = new Stack<Node>();
+					var stack = new Stack<int>();
 
 					if (file != null)
 					{
-						var node = new Node(file);
-						stack.Push(node);
+						stack.Push(file.Id);
 					}
 
 					while (stack.Count > 0)
 					{
-						Node current = stack.Pop();
+						int current = stack.Pop();
 
 						if (nodes.IndexOf(current) == -1)
 						{
@@ -67,22 +66,22 @@ namespace XSLTViz.DataModel
 						}
 
 						var neighbors = (from fr in context.FilesRelations
-											  where fr.Target.Id == current.Id
+											  where fr.Target.Id == current
 											  select fr.Source).ToList();
 						foreach (var n in neighbors)
 						{
-							var node = new Node(n);
-							stack.Push(node);
+							stack.Push(n.Id);
 						}
 					}
 
 					foreach (var fileNode in nodes)
 					{
-						var content = (from f in context.Files
-											where f.Path == fileNode.Name
-											select f.Content).FirstOrDefault();
+						var data = (from f in context.Files
+											where f.Id == fileNode
+											select f).FirstOrDefault();
 
-						context.Files.Add(new File { Content = content, Path = fileNode.Name, Project = newProject, Point = new Point() });
+
+						context.Files.Add(new File { Content = data.Content, Path = data.Path, Project = newProject, Point = new Point() });
 					}
 					context.SaveChanges();
 					ParseFactory.ParseProject(context, newProject);

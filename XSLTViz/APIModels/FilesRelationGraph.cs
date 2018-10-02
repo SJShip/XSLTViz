@@ -15,6 +15,15 @@ namespace XSLTViz.APIModels
         public List<Node> Nodes { get; set; }
     }
 
+	public class Path
+	{
+		[JsonProperty(PropertyName = "links")]
+		public List<Link> Links { get; set; }
+
+		[JsonProperty(PropertyName = "nodes")]
+		public List<int> Nodes { get; set; }
+	}
+
 	public class Tree
 	{
 		[JsonProperty(PropertyName = "nodes")]
