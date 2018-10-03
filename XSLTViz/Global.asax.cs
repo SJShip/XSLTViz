@@ -24,12 +24,12 @@ namespace XSLTViz
 			FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
 			RouteConfig.RegisterRoutes(RouteTable.Routes);
 
-			Database.SetInitializer(new TestDBInitializer());
+			//Database.SetInitializer(new TestDBInitializer());
 
-			using (var context = new DataContext())
-			{
-				context.Database.Initialize(force: true);
-			}
+			//using (var context = new DataContext())
+			//{
+			//	context.Database.Initialize(force: true);
+			//}
 		}
 
 		protected void Session_Start(object sender, EventArgs e)

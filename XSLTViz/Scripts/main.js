@@ -113,12 +113,6 @@
 		}
 	});
 
-	var btnBuildTreeView = $("#btnBuildTree");
-	btnBuildTreeView.on("click", function ()
-	{
-
-	});
-
 	var btnUndockNodes = $("#btnUndockNodes");
 	btnUndockNodes.on("click", function ()
 	{
@@ -299,7 +293,7 @@
 		$.ajax({
 			method: "PATCH",
 			contentType: "application/json",
-			url: "./XSLTViz/api/files/" + d.id,
+			url: "./api/files/" + d.id,
 			data: JSON.stringify(d),
 			error: function (e)
 			{
@@ -321,7 +315,7 @@
 		var ajaxOptions = {
 			method: "PATCH",
 			contentType: "application/json",
-			url: "./XSLTViz/api/projects/{0}".f(project.id + 1),
+			url: "./api/projects/{0}".f(project.id + 1),
 			data: JSON.stringify(settings),
 			error: function (e)
 			{
@@ -341,7 +335,7 @@
 	{
 		$.ajax({
 			method: "PATCH",
-			url: "./XSLTViz/api/projects/{0}/undock".f(project.id + 1),
+			url: "./api/projects/{0}/undock".f(project.id + 1),
 			success: function ()
 			{
 				loadProject(project.id + 1);
@@ -358,10 +352,9 @@
 		codeTitle.text(d.name);
 		$.ajax({
 			method: "GET",
-			url: "./XSLTViz/api/files/{0}/content".f(d.id),
+			url: "./api/files/{0}/content".f(d.id),
 			success: function (data)
 			{
-				btnBuildTreeView.show();
 				codePlaceHolder.html(escapeHtml(data));
 				codePlaceHolder.removeClass("prettyprinted");
 				PR.prettyPrint();
@@ -409,7 +402,7 @@
 	{
 		$.ajax({
 			method: "GET",
-			url: "./XSLTViz/api/graph/{0}/path".f(d.id),
+			url: "./api/graph/{0}/path".f(d.id),
 			contentType: "application/json",
 			success: function (data)
 			{
@@ -456,7 +449,7 @@
 		// Load project data
 		$.ajax({
 			method: "GET",
-			url: "./XSLTViz/api/graph/{0}/trees".f(projectId),
+			url: "./api/graph/{0}/trees".f(projectId),
 			contentType: "application/json",
 			success: function (trees)
 			{
@@ -531,14 +524,17 @@
 
 	function loadProject(projectId)
 	{
+		splitInstance.collapse(0);
 		rightPane.css("visibility", "hidden");
 		// Load project data
 		$.ajax({
 			method: "GET",
-			url: "./XSLTViz/api/projects/" + projectId,
+			url: "./api/projects/" + projectId,
 			contentType: "application/json",
 			success: function (data)
 			{
+				localStorage.setItem("project_id", projectId);
+
 				project = data;
 				$("#project_name").html(data.projectName);
 				$("#total_files").html(data.totalFiles);
@@ -585,179 +581,184 @@
 		});
 	}
 
-	function buildTreeView(fileData)
-	{
-		// Use default size for teh canvas
-		canvas.attr("viewBox", "0 0 {0} {1}".f(w, h));
+	//function buildTreeView(fileData)
+	//{
+	//	// Use default size for teh canvas
+	//	canvas.attr("viewBox", "0 0 {0} {1}".f(w, h));
 
-		d3.json("./XSLTViz/api/graph/treeview/{0}".f(fileData.id + 1), function (graph)
-		{
-			// Clears canvas data excepts <defs>
-			canvas.selectAll("g.node").remove();
-			canvas.selectAll("line.link").remove();
-			canvas.selectAll("linearGradient[x1]").remove();
+	//	d3.json("./api/graph/treeview/{0}".f(fileData.id + 1), function (graph)
+	//	{
+	//		// Clears canvas data excepts <defs>
+	//		canvas.selectAll("g.node").remove();
+	//		canvas.selectAll("line.link").remove();
+	//		canvas.selectAll("linearGradient[x1]").remove();
 
-			document.force = d3.layout.force()
-				.size([w, h])
-				.charge(-50)
-				.linkDistance(function (d)
-				{
-					return 0.1;
-				})
-				.nodes(graph.nodes)
-				.links(graph.links)
-				.start();
+	//		document.force = d3.layout.force()
+	//			.size([w, h])
+	//			.charge(-50)
+	//			.linkDistance(function (d)
+	//			{
+	//				return 0.1;
+	//			})
+	//			.nodes(graph.nodes)
+	//			.links(graph.links)
+	//			.start();
 
-			// Create all the line svgs but without locations yet
-			var link = canvas.selectAll(".link")
-				.data(graph.links)
-				.enter().append("line")
-				.attr("class", "link")
-				.attr("id", function (d)
-				{
-					return "l_{0}_{1}".f(d.source.id, d.target.id);
-				})
-				.style("stroke-width", function (d)
-				{
-					return Math.sqrt(d.value);
-				});
+	//		// Create all the line svgs but without locations yet
+	//		var link = canvas.selectAll(".link")
+	//			.data(graph.links)
+	//			.enter().append("line")
+	//			.attr("class", "link")
+	//			.attr("id", function (d)
+	//			{
+	//				return "l_{0}_{1}".f(d.source.id, d.target.id);
+	//			})
+	//			.style("stroke-width", function (d)
+	//			{
+	//				return Math.sqrt(d.value);
+	//			});
 
-			var linkGradient = defs.selectAll(".gr").data(graph.links).enter()
-				.append("linearGradient")
-				.attr("id", function (d) { return "gr_{0}_{1}".f(d.source.id, d.target.id); })
-				.attr("xlink:href", "#color_edge");
+	//		var linkGradient = defs.selectAll(".gr").data(graph.links).enter()
+	//			.append("linearGradient")
+	//			.attr("id", function (d) { return "gr_{0}_{1}".f(d.source.id, d.target.id); })
+	//			.attr("xlink:href", "#color_edge");
 
-			// Do the same with the circles for the nodes - no 
-			var node = canvas.selectAll(".node")
-				.data(graph.nodes)
-				.enter().append("g")
-				.attr("class", function (d)
-				{
-					var classes = ["node"];
-					if (d.fixed)
-					{
-						classes.push("fixed");
-					}
-					return classes.join(" ");
-				})
-				.attr("data-id", function (d)
-				{
-					return d.id;
-				})
-				.append("circle")
-				.attr("data-leaf", function (d)
-				{
-					return d.leaf;
-				})
-				.attr("r", function (d)
-				{
-					if (project.settings.show_size)
-					{
-						return d.size * 2;
-					}
-					return 3;
-				})
-				.select(function ()
-				{
-					return this.parentNode;
-				})
-				.append("text").text(function (d)
-				{
-					return d.name;
-				})
-				.attr("style", function (d)
-				{
-					if (project.settings.show_size)
-					{
-						return "font-size: {0}pt".f(d.size);
-					}
-				})
-				.select(function ()
-				{
-					return this.parentNode;
-				})
-				.on("dblclick", dblclick)
-				.on("mouseover", function (d)
-				{
-					if (event && event.shiftKey)
-					{
-						markRequiredElements(d);
-					}
-				})
-				.call(drag);
+	//		// Do the same with the circles for the nodes - no 
+	//		var node = canvas.selectAll(".node")
+	//			.data(graph.nodes)
+	//			.enter().append("g")
+	//			.attr("class", function (d)
+	//			{
+	//				var classes = ["node"];
+	//				if (d.fixed)
+	//				{
+	//					classes.push("fixed");
+	//				}
+	//				return classes.join(" ");
+	//			})
+	//			.attr("data-id", function (d)
+	//			{
+	//				return d.id;
+	//			})
+	//			.append("circle")
+	//			.attr("data-leaf", function (d)
+	//			{
+	//				return d.leaf;
+	//			})
+	//			.attr("r", function (d)
+	//			{
+	//				if (project.settings.show_size)
+	//				{
+	//					return d.size * 2;
+	//				}
+	//				return 3;
+	//			})
+	//			.select(function ()
+	//			{
+	//				return this.parentNode;
+	//			})
+	//			.append("text").text(function (d)
+	//			{
+	//				return d.name;
+	//			})
+	//			.attr("style", function (d)
+	//			{
+	//				if (project.settings.show_size)
+	//				{
+	//					return "font-size: {0}pt".f(d.size);
+	//				}
+	//			})
+	//			.select(function ()
+	//			{
+	//				return this.parentNode;
+	//			})
+	//			.on("dblclick", dblclick)
+	//			.on("mouseover", function (d)
+	//			{
+	//				if (event && event.shiftKey)
+	//				{
+	//					markRequiredElements(d);
+	//				} else if (event && event.ctrlKey)
+	//				{
+	//					// Load xsl project
+	//					console.log(this);
+	//					console.log(d);
+	//				}
+	//			})
+	//			.call(drag);
 
-			// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-			document.force.on("tick", function ()
-			{
-				link.attr("x1", function (d)
-				{
-					return d.source.x;
-				})
-					.attr("y1", function (d)
-					{
-						return d.source.y;
-					})
-					.attr("x2", function (d)
-					{
-						return d.target.x;
-					})
-					.attr("y2", function (d)
-					{
-						return d.target.y;
-					});
+	//		// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
+	//		document.force.on("tick", function ()
+	//		{
+	//			link.attr("x1", function (d)
+	//			{
+	//				return d.source.x;
+	//			})
+	//				.attr("y1", function (d)
+	//				{
+	//					return d.source.y;
+	//				})
+	//				.attr("x2", function (d)
+	//				{
+	//					return d.target.x;
+	//				})
+	//				.attr("y2", function (d)
+	//				{
+	//					return d.target.y;
+	//				});
 
-				linkGradient.attr("x1", function (d)
-				{
-					return getGradientParams(d).x1;
-				})
-					.attr("y1", function (d)
-					{
-						return getGradientParams(d).y1;
-					})
-					.attr("x2", function (d)
-					{
-						return getGradientParams(d).x2;
-					})
-					.attr("y2", function (d)
-					{
-						return getGradientParams(d).y2;
-					});
+	//			linkGradient.attr("x1", function (d)
+	//			{
+	//				return getGradientParams(d).x1;
+	//			})
+	//				.attr("y1", function (d)
+	//				{
+	//					return getGradientParams(d).y1;
+	//				})
+	//				.attr("x2", function (d)
+	//				{
+	//					return getGradientParams(d).x2;
+	//				})
+	//				.attr("y2", function (d)
+	//				{
+	//					return getGradientParams(d).y2;
+	//				});
 
-				if (project.settings.color_direction)
-				{
-					link.attr("style", function (d)
-					{
-						return "stroke: url(\"#gr_{0}_{1}\");".f(d.source.id, d.target.id);
-					});
-				} else
-				{
-					link.attr("style", "");
-				}
+	//			if (project.settings.color_direction)
+	//			{
+	//				link.attr("style", function (d)
+	//				{
+	//					return "stroke: url(\"#gr_{0}_{1}\");".f(d.source.id, d.target.id);
+	//				});
+	//			} else
+	//			{
+	//				link.attr("style", "");
+	//			}
 
-				node.select(function () { return this.childNodes[0]; })
-					.attr("cx", function (d)
-					{
-						return d.x;
-					})
-					.attr("cy", function (d)
-					{
-						return d.y;
-					})
-					.select(function ()
-					{
-						return this.parentNode.childNodes[1];
-					})
-					.attr("x", function (d)
-					{
-						return d.x;
-					})
-					.attr("y", function (d)
-					{
-						return d.y + 0.5;
-					});
-			});
-		});
-	}
+	//			node.select(function () { return this.childNodes[0]; })
+	//				.attr("cx", function (d)
+	//				{
+	//					return d.x;
+	//				})
+	//				.attr("cy", function (d)
+	//				{
+	//					return d.y;
+	//				})
+	//				.select(function ()
+	//				{
+	//					return this.parentNode.childNodes[1];
+	//				})
+	//				.attr("x", function (d)
+	//				{
+	//					return d.x;
+	//				})
+	//				.attr("y", function (d)
+	//				{
+	//					return d.y + 0.5;
+	//				});
+	//		});
+	//	});
+	//}
 
 	function buildGraphics(projectData)
 	{
@@ -768,7 +769,7 @@
 		}
 
 		// Load graph data
-		d3.json("./XSLTViz/api/graph/{0}".f(projectData.id + 1), function (graph)
+		d3.json("./api/graph/{0}".f(projectData.id + 1), function (graph)
 		{
 			// Clears canvas data excepts <defs>
 			canvas.selectAll("g.node").remove();
@@ -864,6 +865,14 @@
 					if (event && event.shiftKey)
 					{
 						markRequiredElements(d);
+					} else if (event && event.ctrlKey)
+					{
+						// Load xsl project
+						if (d.name.endsWith(".xsl"))
+						{
+							var xslProjectId = $("a.dropdown-item:contains({0})".f(d.name)).attr("data-id");
+							loadProject(parseInt(xslProjectId));
+						}
 					}
 				})
 				.call(drag);
@@ -943,5 +952,14 @@
 		});
 	}
 
-	loadProject(1);
+	var projectId = localStorage.getItem("project_id");
+	if (projectId)
+	{
+		projectId = parseInt(projectId);
+	} else
+	{
+		projectId = 1;
+	}
+
+	loadProject(projectId);
 });

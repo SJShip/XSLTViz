@@ -16,7 +16,7 @@ namespace XSLTViz.DataModel
 		{
 
 			// Default project
-			var defaultProject = context.Projects.Add(new Project { ProjectName = "All Stylesheets", Settings = new Settings { } });
+			var defaultProject = context.Projects.Add(new Project { ProjectName = "All Stylesheets", Settings = new Settings { AreLabelsShown = true, IsDirectionColored = true, AreLeafsHighlighted = true} });
 			var filesLocation = ConfigurationManager.AppSettings["filesLocation"];
 			var files = Directory.GetFiles(filesLocation);
 			foreach (var filePath in files)
@@ -40,7 +40,7 @@ namespace XSLTViz.DataModel
 					var lIndex = filePath.LastIndexOf("\\");
 					var shortPath = filePath.Substring(lIndex + 1);
 
-					var newProject = context.Projects.Add(new Project { ProjectName = shortPath, Settings = new Settings { } });
+					var newProject = context.Projects.Add(new Project { ProjectName = shortPath, Settings = new Settings { AreLabelsShown = true, IsDirectionColored = true, AreLeafsHighlighted = true } });
 
 					var nodes = new List<int>();
 
