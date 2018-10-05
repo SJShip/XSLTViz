@@ -268,19 +268,45 @@ namespace XSLTViz.DataModel
 								  select call).ToList();
 				foreach (var call in calls)
 				{
-					
+					if (call.Selector == TemplateSelector.Name)
+					{
+						var targetTemplate = includeTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Name 
+							&& t.SelectorValue == call.SelectorValue && call.Mode == t.Mode).FirstOrDefault();
+
+						if (targetTemplate == null)
+						{
+							targetTemplate = importTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Name 
+								&& t.SelectorValue == call.SelectorValue && t.Mode == call.Mode).FirstOrDefault();
+						}
+
+						if (targetTemplate != null)
+						{
+							context.TemplatesRelation.Add(new TemplatesRelation { Source = current, Target = targetTemplate });
+						}
+					}
+					else
+					{
+						IEnumerable<Template> targetTemplates;
+						if (call.ForImports)
+						{
+							targetTemplates = importTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Match && t.Mode == call.Mode 
+							&& (call.SelectorValue == t.SelectorValue || call.SelectorValue.Length == 0));
+						}
+						else
+						{
+							targetTemplates = includeTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Match && t.Mode == call.Mode 
+							&& call.SelectorValue == t.SelectorValue || call.SelectorValue.Length == 0);
+						}
+
+						if (targetTemplates != null)
+						{
+							foreach (var targetTemplate in targetTemplates)
+							{
+								context.TemplatesRelation.Add(new TemplatesRelation { Source = current, Target = targetTemplate });
+							}
+						}
+					}
 				}
-			}
-
-
-			List<TemplateCall> fileTemplateCalls = new List<TemplateCall>();
-
-			foreach (var t in fileTemplates)
-			{
-				var tCalls = (from call in context.TemplateCalls
-								  where call.Template.Id == t.Id
-								  select call).ToList();
-				fileTemplateCalls.AddRange(tCalls);
 			}
 		}
 
@@ -309,8 +335,6 @@ namespace XSLTViz.DataModel
 				ParseFile(context, file, project.Id);
 			}
 			context.SaveChanges();
-
-			//GenerateTemplateRelations(context, project.Id);
 		}
 	}
 }
