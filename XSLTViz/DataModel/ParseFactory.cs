@@ -9,14 +9,13 @@ namespace XSLTViz.DataModel
 	public static class ParseFactory
 	{
 		public static List<int> ProcessedFiles;
-		public static Dictionary<int, List<Template>> ImportTemplateScope;
-		public static Dictionary<int, List<Template>> IncludeTemplateScope;
+		public static Dictionary<int, List<Template>> TemplateScope;
+
 
 		static ParseFactory()
 		{
 			ProcessedFiles = new List<int>();
-			ImportTemplateScope = new Dictionary<int, List<Template>>();
-			IncludeTemplateScope = new Dictionary<int, List<Template>>();
+			TemplateScope = new Dictionary<int, List<Template>>();
 		}
 
 		public static void ParseTemplateData(DataContext context, XmlNode templateNode, Template template, XmlNamespaceManager nsMgr)
@@ -151,13 +150,13 @@ namespace XSLTViz.DataModel
 
 		public static void ProcessTemplates(DataContext context, int fileId)
 		{
-			var importedFileIds = (from f in context.FilesRelations
+			var importedFileIds = (from f in context.FilesRelations.Local
 										  where f.Target.Id == fileId && f.Mode == FilesRelationMode.Import
 										  orderby f.Order
 										  select f.Source.Id
 										 ).ToList();
 
-			var includedFileIds = (from f in context.FilesRelations
+			var includedFileIds = (from f in context.FilesRelations.Local
 										  where f.Target.Id == fileId && f.Mode == FilesRelationMode.Include
 										  orderby f.Order
 										  select f.Source.Id).ToList();
@@ -170,9 +169,9 @@ namespace XSLTViz.DataModel
 					ProcessTemplates(context, file);
 				}
 
-				if (ImportTemplateScope.ContainsKey(file))
+				if (TemplateScope.ContainsKey(file))
 				{
-					foreach (var template in ImportTemplateScope[file])
+					foreach (var template in TemplateScope[file])
 					{
 						var elem = importTemplates.FirstOrDefault(t => t.Selector == template.Selector &&
 							t.SelectorValue == template.SelectorValue && t.Mode == template.Mode);
@@ -189,10 +188,6 @@ namespace XSLTViz.DataModel
 					}
 				}
 			}
-			if (importTemplates.Count > 0)
-			{
-				ImportTemplateScope[fileId] = importTemplates;
-			}
 
 			var includeTemplates = new List<Template>();
 			foreach (var file in includedFileIds)
@@ -202,9 +197,9 @@ namespace XSLTViz.DataModel
 					ProcessTemplates(context, file);
 				}
 
-				if (IncludeTemplateScope.ContainsKey(file))
+				if (TemplateScope.ContainsKey(file))
 				{
-					foreach (var template in IncludeTemplateScope[file])
+					foreach (var template in TemplateScope[file])
 					{
 						var elem = includeTemplates.FirstOrDefault(t => t.Selector == template.Selector &&
 							t.SelectorValue == template.SelectorValue && t.Mode == template.Mode);
@@ -222,7 +217,7 @@ namespace XSLTViz.DataModel
 				}
 			}
 
-			var fileTemplates = (from t in context.Templates
+			var fileTemplates = (from t in context.Templates.Local
 										where t.File.Id == fileId
 										select t).ToList();
 
@@ -242,22 +237,43 @@ namespace XSLTViz.DataModel
 				}
 			}
 
-			if (includeTemplates.Count > 0)
+			if (importTemplates.Count > 0)
 			{
-				IncludeTemplateScope[fileId] = includeTemplates;
+				TemplateScope[fileId] = importTemplates;
+			}
+			else {
+				TemplateScope[fileId] = new List<Template>();
 			}
 
-			// Find the template for root node
-			var rootTemplate = includeTemplates.LastOrDefault(t => t.Selector == TemplateSelector.Match && t.SelectorValue == "/" && t.Mode.Length == 0);
-			if (rootTemplate == null)
+			if (includeTemplates.Count > 0)
 			{
-				rootTemplate = importTemplates.LastOrDefault(t => t.Selector == TemplateSelector.Match && t.SelectorValue == "/" && t.Mode.Length == 0);
+				foreach (var includeTemplate in includeTemplates)
+				{
+					var elem = TemplateScope[fileId].FirstOrDefault(t => t.Selector == includeTemplate.Selector &&
+					t.SelectorValue == includeTemplate.SelectorValue && t.Mode == includeTemplate.Mode);
+					if (elem != null)
+					{
+						var index = TemplateScope[fileId].IndexOf(elem);
+						TemplateScope[fileId][index] = includeTemplate;
+					}
+					else
+					{
+						TemplateScope[fileId].Add(includeTemplate);
+					}
+				}
 			}
 
 			Stack<Template> templateStack = new Stack<Template>();
+			List<Template> templateList = new List<Template>();
+
+
+			// Find the template for root node
+			var rootTemplate = TemplateScope[fileId].LastOrDefault(t => t.Selector == TemplateSelector.Match && t.SelectorValue == "/" && t.Mode.Length == 0);
+
 			if (rootTemplate != null)
 			{
 				templateStack.Push(rootTemplate);
+				templateList.Add(rootTemplate);
 			}
 
 			while (templateStack.Count > 0)
@@ -270,18 +286,14 @@ namespace XSLTViz.DataModel
 				{
 					if (call.Selector == TemplateSelector.Name)
 					{
-						var targetTemplate = includeTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Name 
-							&& t.SelectorValue == call.SelectorValue && call.Mode == t.Mode).FirstOrDefault();
-
-						if (targetTemplate == null)
-						{
-							targetTemplate = importTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Name 
-								&& t.SelectorValue == call.SelectorValue && t.Mode == call.Mode).FirstOrDefault();
-						}
+						var targetTemplate = TemplateScope[fileId].Where(t => t.Selector == TemplateSelector.Name 
+							&& t.SelectorValue == call.SelectorValue && call.Mode == t.Mode && !templateList.Contains(t)).FirstOrDefault();
 
 						if (targetTemplate != null)
 						{
-							context.TemplatesRelation.Add(new TemplatesRelation { Source = current, Target = targetTemplate });
+							context.TemplatesRelation.Add(new TemplatesRelation { Target = current, Source = targetTemplate });
+							templateStack.Push(targetTemplate);
+							templateList.Add(targetTemplate);
 						}
 					}
 					else
@@ -289,24 +301,27 @@ namespace XSLTViz.DataModel
 						IEnumerable<Template> targetTemplates;
 						if (call.ForImports)
 						{
-							targetTemplates = importTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Match && t.Mode == call.Mode 
+							targetTemplates = importTemplates.Where(t => !templateList.Contains(t) && t.Selector == TemplateSelector.Match && t.Mode == call.Mode 
 							&& (call.SelectorValue == t.SelectorValue || call.SelectorValue.Length == 0));
 						}
 						else
 						{
-							targetTemplates = includeTemplates.Where(t => t.Id != current.Id && t.Selector == TemplateSelector.Match && t.Mode == call.Mode 
-							&& call.SelectorValue == t.SelectorValue || call.SelectorValue.Length == 0);
+							targetTemplates = TemplateScope[fileId].Where(t => !templateList.Contains(t) && t.Selector == TemplateSelector.Match && t.Mode == call.Mode 
+							&& (call.SelectorValue == t.SelectorValue || call.SelectorValue.Length == 0));
 						}
 
 						if (targetTemplates != null)
 						{
 							foreach (var targetTemplate in targetTemplates)
 							{
-								context.TemplatesRelation.Add(new TemplatesRelation { Source = current, Target = targetTemplate });
+								context.TemplatesRelation.Add(new TemplatesRelation { Target = current, Source = targetTemplate });
+								templateStack.Push(targetTemplate);
+								templateList.Add(targetTemplate);
 							}
 						}
 					}
 				}
+				context.SaveChanges();
 			}
 		}
 
@@ -320,6 +335,7 @@ namespace XSLTViz.DataModel
 			{
 				ProcessTemplates(context, file.Id);
 			}
+
 			context.SaveChanges();
 		}
 
@@ -335,6 +351,7 @@ namespace XSLTViz.DataModel
 				ParseFile(context, file, project.Id);
 			}
 			context.SaveChanges();
+			GenerateTemplateRelations(context, project.Id);
 		}
 	}
 }

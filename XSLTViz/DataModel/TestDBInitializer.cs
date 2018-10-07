@@ -31,63 +31,63 @@ namespace XSLTViz.DataModel
 			}
 			context.SaveChanges();
 			ParseFactory.ParseProject(context, defaultProject);
-			ParseFactory.GenerateTemplateRelations(context, defaultProject.Id);
+
 
 			// Separate views for *.xsl files
-			//foreach (var filePath in files)
-			//{
-			//	if (filePath.EndsWith(".xsl"))
-			//	{
-			//		var lIndex = filePath.LastIndexOf("\\");
-			//		var shortPath = filePath.Substring(lIndex + 1);
+			foreach (var filePath in files)
+			{
+				if (filePath.EndsWith(".xsl"))
+				{
+					var lIndex = filePath.LastIndexOf("\\");
+					var shortPath = filePath.Substring(lIndex + 1);
 
-			//		var newProject = context.Projects.Add(new Project { ProjectName = shortPath, Settings = new Settings { AreLabelsShown = true, IsDirectionColored = true, AreLeafsHighlighted = true } });
+					var newProject = context.Projects.Add(new Project { ProjectName = shortPath, Settings = new Settings { AreLabelsShown = true, IsDirectionColored = true, AreLeafsHighlighted = true } });
 
-			//		var nodes = new List<int>();
-
-
-			//		var file = (from f in context.Files
-			//						where f.Path == shortPath && f.Project.Id == defaultProject.Id
-			//						select f).FirstOrDefault();
-
-			//		var stack = new Stack<int>();
-
-			//		if (file != null)
-			//		{
-			//			stack.Push(file.Id);
-			//		}
-
-			//		while (stack.Count > 0)
-			//		{
-			//			int current = stack.Pop();
-
-			//			if (nodes.IndexOf(current) == -1)
-			//			{
-			//				nodes.Add(current);
-			//			}
-
-			//			var neighbors = (from fr in context.FilesRelations
-			//								  where fr.Target.Id == current
-			//								  select fr.Source).ToList();
-			//			foreach (var n in neighbors)
-			//			{
-			//				stack.Push(n.Id);
-			//			}
-			//		}
-
-			//		foreach (var fileNode in nodes)
-			//		{
-			//			var data = (from f in context.Files
-			//								where f.Id == fileNode
-			//								select f).FirstOrDefault();
+					var nodes = new List<int>();
 
 
-			//			context.Files.Add(new File { Content = data.Content, Path = data.Path, Project = newProject, Point = new Point() });
-			//		}
-			//		context.SaveChanges();
-			//		ParseFactory.ParseProject(context, newProject);
-			//	}
-			//}
+					var file = (from f in context.Files
+									where f.Path == shortPath && f.Project.Id == defaultProject.Id
+									select f).FirstOrDefault();
+
+					var stack = new Stack<int>();
+
+					if (file != null)
+					{
+						stack.Push(file.Id);
+					}
+
+					while (stack.Count > 0)
+					{
+						int current = stack.Pop();
+
+						if (nodes.IndexOf(current) == -1)
+						{
+							nodes.Add(current);
+						}
+
+						var neighbors = (from fr in context.FilesRelations
+											  where fr.Target.Id == current
+											  select fr.Source).ToList();
+						foreach (var n in neighbors)
+						{
+							stack.Push(n.Id);
+						}
+					}
+
+					foreach (var fileNode in nodes)
+					{
+						var data = (from f in context.Files
+										where f.Id == fileNode
+										select f).FirstOrDefault();
+
+
+						context.Files.Add(new File { Content = data.Content, Path = data.Path, Project = newProject, Point = new Point() });
+					}
+					context.SaveChanges();
+					ParseFactory.ParseProject(context, newProject);
+				}
+			}
 
 			base.Seed(context);
 		}
