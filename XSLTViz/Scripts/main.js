@@ -155,6 +155,22 @@
 			.attr("viewBox", [0, 0, w, h].join(" ")),
 		defs = d3.select("#viewport > svg > defs");
 
+	canvas.on("click", function ()
+	{
+		if (splitInstance.getSizes()[2] > 5)
+		{
+			splitInstance.collapse(2);
+		}
+	});
+
+	$(document).keydown(function (e)
+	{
+		if (e.which == 27)
+		{
+			loadProject(1);
+		}
+	});
+
 	//Set up the colour scale
 	var color = d3.scale.category20();
 
@@ -589,6 +605,7 @@
 					buildTemplatesGraphics(data);
 				} else
 				{
+					chkShowTemplates.prop("checked", false);
 					buildGraphics(data);
 				}
 			},
@@ -883,7 +900,7 @@
 				{
 					if (d.leaf)
 					{
-						return 1;
+						return 10;
 					}
 					return 3;
 				})
