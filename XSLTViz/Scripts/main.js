@@ -454,6 +454,11 @@
 		d.fixed = true;
 		d.x = Number($this.attr("cx"));
 		d.y = Number($this.attr("cy"));
+
+		if (d.id > 2000000)
+		{
+			d.id -= 2000000;
+		}
 		getFileContent(d);
 	}
 
