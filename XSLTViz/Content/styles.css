@@ -49,6 +49,13 @@ g.node circle {
 	stroke-width: 0.15px;
 }
 
+g.node.file cicrle,
+body.show_leaves g.node.file circle {
+	fill: red !important;
+	opacity: 0.1 !important;
+	stroke: none !important;
+}
+
 g.node.highlighted > circle {
 	fill: blue !important;
 }
@@ -81,7 +88,12 @@ g.node > text {
 	user-select: none;
 	font-weight: bold;
 	fill: #999;
-}
+   }
+
+	body.show_labels g.file > text {
+		font-size: 8px !important;
+		opacity: 0.5;
+	}
 
 	body.show_labels.show_leaves g > text {
 		fill: #000;

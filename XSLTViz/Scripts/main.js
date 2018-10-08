@@ -167,7 +167,14 @@
 	{
 		if (e.which == 27)
 		{
-			loadProject(1);
+			if (chkShowTemplates.prop("checked"))
+			{
+				var projectId = localStorage.getItem("project_id");
+				loadProject(projectId);
+			} else
+			{
+				loadProject(1);
+			}
 		}
 	});
 
@@ -423,6 +430,30 @@
 		d.x = Number($this.attr("cx"));
 		d.y = Number($this.attr("cy"));
 		updateFile(d);
+		getFileContent(d);
+	}
+
+	function templatesDragStart(d)
+	{
+		if (!d.leaf) return;
+
+		$(".highlighted").removeClass("highlighted");
+		$(".head").removeClass("head");
+
+		d3.select(this).classed("fixed", d.fixed = true);
+	}
+
+	function templatesDragEnd(d)
+	{
+		if (!d.leaf) return;
+
+		$(".highlighted").removeClass("highlighted");
+		$(".head").removeClass("head");
+
+		var $this = $(this.childNodes[0]);
+		d.fixed = true;
+		d.x = Number($this.attr("cx"));
+		d.y = Number($this.attr("cy"));
 		getFileContent(d);
 	}
 
@@ -843,10 +874,14 @@
 					}
 					return 0;
 				})
-				.gravity(0.1)
+				.gravity(0.05)
 				.nodes(graph.nodes)
 				.links(graph.links)
 				.start();
+
+				var drag = document.force.drag()
+					.on("dragstart", templatesDragStart)
+					.on("dragend", templatesDragEnd);
 
 			// Create all the line svgs but without locations yet
 			var link = canvas.selectAll(".link")
@@ -881,6 +916,12 @@
 				.attr("class", function (d)
 				{
 					var classes = ["node"];
+
+					if (d.leaf)
+					{
+						classes.push("file");
+					}
+
 					if (d.fixed)
 					{
 						classes.push("fixed");
@@ -892,15 +933,11 @@
 					return d.id;
 				})
 				.append("circle")
-				.attr("data-leaf", function (d)
-				{
-					return d.leaf;
-				})
 				.attr("r", function (d)
 				{
 					if (d.leaf)
 					{
-						return 10;
+						return 40;
 					}
 					return 3;
 				})
@@ -914,15 +951,16 @@
 				})
 				.attr("style", function (d)
 				{
-					if (project.settings.show_size)
+					if (project.leaf)
 					{
-						return "font-size: {0}pt".f(d.size);
+						return "font-size: {0}pt".f(15);
 					}
 				})
 				.select(function ()
 				{
 					return this.parentNode;
-				});
+				})
+				.call(drag);				;
 
 			// Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
 			document.force.on("tick", function ()
