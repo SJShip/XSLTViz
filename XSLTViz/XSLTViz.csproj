@@ -142,6 +142,7 @@
     <Compile Include="APIModels\Link.cs" />
     <Compile Include="APIModels\Node.cs" />
     <Compile Include="APIModels\ProjectInfo.cs" />
+    <Compile Include="APIModels\TemplateNode.cs" />
     <Compile Include="APIModels\TreeLink.cs" />
     <Compile Include="APIModels\TreeNode.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />

@@ -35,6 +35,10 @@ line.link {
 	marker-end: url(#arrow);
 }
 
+	line.link.hidden {
+		display: none;
+	}
+
 body.color_edges line.link {
 	marker-end: none;
 	stroke-width: 0.8px;
